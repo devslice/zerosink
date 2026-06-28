@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.11] - 2026-06-28
+
+### Changed
+- **Login Form Architecture:** Restructured the dashboard login form to maintain a unified DOM context — username, password, and TOTP inputs now share a single parent `<form>` block; section switching uses `x-show` (CSS hiding) to keep all fields present in the DOM, fixing Zoho Vault extension tracking for automatic TOTP injection and auto-login loops.
+
 ## [1.0.10] - 2026-06-28
 
 ### Changed

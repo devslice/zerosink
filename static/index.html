@@ -135,8 +135,10 @@
  </button>
  </div>
 
+ <!-- Unified Login Form -->
+ <form @submit.prevent="require2fa ? verify2fa() : login()" class="space-y-6">
  <!-- Step 1: Password Login -->
- <form x-show="!require2fa" @submit.prevent="login()" class="space-y-6">
+ <div x-show="!require2fa" class="space-y-6">
  <div>
  <label class="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">Admin Username</label>
  <div class="relative">
@@ -182,10 +184,10 @@
  >
  Access Dashboard
  </button>
- </form>
+ </div>
 
  <!-- Step 2: 2FA Verification -->
- <form x-show="require2fa" @submit.prevent="verify2fa()" class="space-y-6" x-cloak>
+ <div x-show="require2fa" class="space-y-6" x-cloak>
  <div>
  <label class="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">Two-Factor Authenticator Code</label>
  <div class="relative">
@@ -198,12 +200,10 @@
   name="totp"
   x-model="login2faCode" 
   class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 text-center tracking-[0.5em] text-lg focus:outline-none transition" 
-  placeholder="000000" 
-  maxlength="6"
-  pattern="[0-9]{6}"
+  placeholder="000000"
   inputmode="numeric"
   autocomplete="one-time-code"
-  :required="require2fa"
+  tabindex="0"
   >
  </div>
  <p class="text-gray-500 dark:text-neutral-500 text-xs mt-2 text-center">Enter the 6-digit verification code from your authenticator app.</p>
@@ -225,6 +225,7 @@
  >
  Verify & Enter
  </button>
+ </div>
  </div>
  </form>
  </div>
