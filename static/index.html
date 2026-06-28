@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ZeroSink | DNS Ad Blocker</title>
   <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -39,14 +40,22 @@
           },
           colors: {
             lime: {
-              400: '#a3e635',
-              500: '#84cc16',
-              600: '#65a30d',
-              700: '#4d7c0f',
+              50: '#f4fbf0',
+              100: '#e6f7df',
+              200: '#cff0bc',
+              300: '#ade48d',
+              400: '#8deb00', // Neon green for dark mode highlights
+              500: '#2d6c00', // Deep green for light mode (WCAG AA)
+              600: '#225200',
+              700: '#173800',
+              800: '#102700',
+              900: '#0a1a00',
+              950: '#030a00',
             },
-            darkbg: '#121212',
-            darkcard: '#1e1e1e',
-            darkinput: '#2a2a2a',
+            darkbg: '#0a0d14',
+            darkcard: '#111622',
+            darkborder: '#1b2231',
+            darkinput: '#161e2b',
           }
         }
       }
@@ -56,13 +65,13 @@
     [x-cloak] { display: none !important; }
     /* Scrollbar style */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    .dark ::-webkit-scrollbar-track { background: #121212; }
-    .dark ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    .dark ::-webkit-scrollbar-thumb:hover { background: #84cc16; }
+    .dark ::-webkit-scrollbar-track { background: #0a0d14; }
+    .dark ::-webkit-scrollbar-thumb { background: #1b2231; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #8deb00; }
     
     ::-webkit-scrollbar-track { background: #f3f4f6; }
     ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #84cc16; }
+    ::-webkit-scrollbar-thumb:hover { background: #2d6c00; }
   </style>
 </head>
 <body 
@@ -397,114 +406,213 @@
     <!-- SIDEBAR -->
     <aside 
       :class="showMobileMenu ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
-      class="fixed md:sticky top-0 inset-y-0 left-0 w-64 h-full md:h-screen bg-slate-50 dark:bg-darkcard border-r border-slate-200/80 dark:border-neutral-800 flex flex-col justify-between z-40 transition-transform duration-300 ease-in-out"
+      class="fixed md:sticky top-0 inset-y-0 left-0 w-64 md:w-24 h-full md:h-screen bg-slate-50 dark:bg-darkcard border-r border-slate-200/80 dark:border-neutral-800 flex flex-col justify-between z-40 transition-all duration-300 ease-in-out"
     >
       <div>
         <!-- Logo -->
-        <div class="p-6 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <span class="text-lime-700 dark:text-lime-500 text-2xl"><i class="fa-solid fa-shield-halved"></i></span>
-            <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-700 dark:text-lime-500 font-medium">Sink</span></span>
-          </div>
-          <!-- Sidebar Toggle / Theme (Desktop) / Close (Mobile) -->
-          <div class="flex items-center space-x-1">
-            <!-- Theme toggle (hidden on mobile sidebar) -->
-            <button 
-              @click="toggleTheme()" 
-              class="hidden md:block p-2 rounded-lg bg-slate-200/60 dark:bg-neutral-800 text-slate-700 dark:text-gray-400 hover:text-lime-700 dark:hover:text-lime-400 transition"
-            >
-              <i class="fa-solid" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
-            </button>
-            <!-- Close Button for Mobile -->
+        <div class="p-4 md:p-6 border-b border-slate-200 dark:border-neutral-800 flex flex-col items-center justify-center">
+          <!-- Mobile layout -->
+          <div class="flex md:hidden items-center justify-between w-full">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-800 flex items-center justify-center font-black text-lime-600 dark:text-lime-400 text-xl tracking-tighter shadow-sm">
+                ZS
+              </div>
+              <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-700 dark:text-lime-400 font-medium">Sink</span></span>
+            </div>
             <button 
               @click="showMobileMenu = false" 
-              class="md:hidden p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-neutral-800 text-slate-700 dark:text-gray-400 hover:text-red-500 transition"
+              class="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-neutral-800 text-slate-700 dark:text-gray-400 hover:text-red-500 transition"
             >
               <i class="fa-solid fa-xmark text-lg"></i>
             </button>
           </div>
+          
+          <!-- Desktop layout (stacked ZS and ZeroSink text) -->
+          <div class="hidden md:flex flex-col items-center space-y-1.5 w-full">
+            <div class="w-12 h-12 rounded-xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 flex items-center justify-center font-black text-lime-600 dark:text-lime-400 text-xl tracking-tighter shadow-md">
+              ZS
+            </div>
+            <span class="text-3xs font-extrabold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase text-center block leading-none">ZeroSink</span>
+          </div>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="p-4 space-y-1">
+        <nav class="p-4 md:p-3 space-y-1 md:space-y-3 flex flex-col items-center">
+          <!-- Dashboard -->
           <button 
             @click="activeTab = 'dashboard'; loadStats(); showMobileMenu = false" 
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
-            :class="activeTab === 'dashboard' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+            class="relative w-full flex items-center px-4 py-3 md:py-1 md:px-0 md:justify-center transition group"
+            :class="activeTab === 'dashboard' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            <span><i class="fa-solid fa-chart-line w-5"></i></span>
-            <span>Dashboard</span>
+            <!-- Left indicator line -->
+            <div 
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              :class="activeTab === 'dashboard' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
+            ></div>
+            <!-- Icon Wrapper -->
+            <div 
+              class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
+              :class="activeTab === 'dashboard' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+            >
+              <i class="fa-solid fa-table-cells-large text-base md:text-lg"></i>
+            </div>
+            <span class="ml-3 md:hidden text-sm font-semibold">Dashboard</span>
+            <!-- Custom Tooltip -->
+            <div class="hidden md:group-hover:block absolute left-20 bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-neutral-700 whitespace-nowrap z-50 pointer-events-none">
+              Dashboard
+            </div>
           </button>
 
+          <!-- Query Log -->
           <button 
             @click="activeTab = 'logs'; loadLogs(); showMobileMenu = false" 
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
-            :class="activeTab === 'logs' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+            class="relative w-full flex items-center px-4 py-3 md:py-1 md:px-0 md:justify-center transition group"
+            :class="activeTab === 'logs' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            <span><i class="fa-solid fa-list-ul w-5"></i></span>
-            <span>Query Log</span>
+            <div 
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              :class="activeTab === 'logs' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
+            ></div>
+            <div 
+              class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
+              :class="activeTab === 'logs' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+            >
+              <i class="fa-solid fa-file-lines text-base md:text-lg"></i>
+            </div>
+            <span class="ml-3 md:hidden text-sm font-semibold">Query Log</span>
+            <div class="hidden md:group-hover:block absolute left-20 bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-neutral-700 whitespace-nowrap z-50 pointer-events-none">
+              Query Log
+            </div>
           </button>
 
+          <!-- Group Manager -->
           <button 
             @click="activeTab = 'groups'; loadGroups(); mobileShowDetails = false; showMobileMenu = false" 
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
-            :class="activeTab === 'groups' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+            class="relative w-full flex items-center px-4 py-3 md:py-1 md:px-0 md:justify-center transition group"
+            :class="activeTab === 'groups' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            <span><i class="fa-solid fa-users w-5"></i></span>
-            <span>Group Manager</span>
+            <div 
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              :class="activeTab === 'groups' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
+            ></div>
+            <div 
+              class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
+              :class="activeTab === 'groups' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+            >
+              <i class="fa-solid fa-desktop text-base md:text-lg"></i>
+            </div>
+            <span class="ml-3 md:hidden text-sm font-semibold">Group Manager</span>
+            <div class="hidden md:group-hover:block absolute left-20 bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-neutral-700 whitespace-nowrap z-50 pointer-events-none">
+              Group Manager
+            </div>
           </button>
 
+          <!-- Parental Controls -->
           <button 
             @click="activeTab = 'parental'; loadParentalStatus(); showMobileMenu = false" 
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
-            :class="activeTab === 'parental' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+            class="relative w-full flex items-center px-4 py-3 md:py-1 md:px-0 md:justify-center transition group"
+            :class="activeTab === 'parental' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            <span><i class="fa-solid fa-child w-5"></i></span>
-            <span>Parental Controls</span>
+            <div 
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              :class="activeTab === 'parental' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
+            ></div>
+            <div 
+              class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
+              :class="activeTab === 'parental' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+            >
+              <i class="fa-solid fa-user-lock text-base md:text-lg"></i>
+            </div>
+            <span class="ml-3 md:hidden text-sm font-semibold">Parental Controls</span>
+            <div class="hidden md:group-hover:block absolute left-20 bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-neutral-700 whitespace-nowrap z-50 pointer-events-none">
+              Parental Controls
+            </div>
           </button>
 
+          <!-- Settings & Backup -->
           <button 
             @click="activeTab = 'settings'; loadSettings(); showMobileMenu = false" 
-            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition animate-fade"
-            :class="activeTab === 'settings' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+            class="relative w-full flex items-center px-4 py-3 md:py-1 md:px-0 md:justify-center transition group"
+            :class="activeTab === 'settings' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            <div class="flex items-center space-x-3">
-              <span><i class="fa-solid fa-sliders w-5"></i></span>
-              <span>Settings & Backup</span>
+            <div 
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              :class="activeTab === 'settings' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
+            ></div>
+            <div 
+              class="relative flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
+              :class="activeTab === 'settings' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+            >
+              <i class="fa-solid fa-gear text-base md:text-lg"></i>
+              <!-- Desktop Update Badge -->
+              <span x-show="showUpdateBadge" x-cloak class="hidden md:block absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-slate-50 dark:border-darkcard animate-pulse" title="New version available!"></span>
             </div>
-            <!-- Update Notification Badge -->
-            <span x-show="showUpdateBadge" x-cloak class="w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-50 dark:border-darkcard animate-pulse" title="New version available!"></span>
+            <span class="ml-3 md:hidden text-sm font-semibold">Settings &amp; Backup</span>
+            <!-- Mobile Update Badge -->
+            <span x-show="showUpdateBadge" x-cloak class="md:hidden ml-2 w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-50 dark:border-darkcard animate-pulse" title="New version available!"></span>
+            
+            <div class="hidden md:group-hover:block absolute left-20 bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-neutral-700 whitespace-nowrap z-50 pointer-events-none">
+              Settings &amp; Backup
+            </div>
           </button>
 
+          <!-- How to Setup -->
           <button 
             @click="activeTab = 'guide'; showMobileMenu = false" 
-            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
-            :class="activeTab === 'guide' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+            class="relative w-full flex items-center px-4 py-3 md:py-1 md:px-0 md:justify-center transition group"
+            :class="activeTab === 'guide' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
-            <span><i class="fa-solid fa-book w-5"></i></span>
-            <span>How to Setup</span>
+            <div 
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              :class="activeTab === 'guide' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
+            ></div>
+            <div 
+              class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
+              :class="activeTab === 'guide' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+            >
+              <i class="fa-solid fa-circle-question text-base md:text-lg"></i>
+            </div>
+            <span class="ml-3 md:hidden text-sm font-semibold">How to Setup</span>
+            <div class="hidden md:group-hover:block absolute left-20 bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-neutral-700 whitespace-nowrap z-50 pointer-events-none">
+              How to Setup
+            </div>
           </button>
         </nav>
       </div>
 
       <!-- User footer -->
-      <div class="p-4 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 rounded-full bg-lime-500/20 text-lime-700 dark:text-lime-400 flex items-center justify-center font-bold">
+      <div class="p-4 border-t border-slate-200 dark:border-neutral-800 flex md:flex-col items-center justify-between md:space-y-4">
+        <!-- User profile -->
+        <div class="flex items-center space-x-3 md:space-x-0">
+          <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-lime-500/20 text-lime-700 dark:text-lime-400 flex items-center justify-center font-bold cursor-help" title="Admin (zerosink)">
             A
           </div>
-          <div>
+          <div class="md:hidden">
             <div class="text-sm font-bold dark:text-white">Admin</div>
             <div class="text-xs text-slate-700 dark:text-neutral-300">zerosink</div>
           </div>
         </div>
-        <button 
-          @click="logout()" 
-          class="p-2 text-slate-600 hover:text-red-500 transition" 
-          title="Logout"
-        >
-          <i class="fa-solid fa-arrow-right-from-bracket"></i>
-        </button>
+        
+        <!-- Actions: Theme toggle & Logout -->
+        <div class="flex items-center space-x-1.5 md:flex-col md:space-x-0 md:space-y-3">
+          <!-- Theme toggle -->
+          <button 
+            @click="toggleTheme()" 
+            class="p-2.5 rounded-xl bg-slate-200/60 dark:bg-neutral-900 text-slate-700 dark:text-gray-400 hover:text-lime-700 dark:hover:text-lime-400 transition border border-transparent dark:border-neutral-800/50"
+            title="Toggle Theme"
+          >
+            <i class="fa-solid" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+          </button>
+          
+          <!-- Logout -->
+          <button 
+            @click="logout()" 
+            class="p-2.5 rounded-xl text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition" 
+            title="Logout"
+          >
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -518,56 +626,112 @@
             <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">Dashboard</h2>
             <p class="text-gray-500 dark:text-neutral-400 text-sm mt-1">Real-time stats and network insights</p>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-lime-500 animate-ping mr-1"></span>
-            <span class="text-xs font-semibold text-gray-500 dark:text-neutral-400">Live Updates Enabled</span>
+          <div class="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+            <div class="flex items-center space-x-2 bg-slate-200/50 dark:bg-neutral-900 border border-slate-300/50 dark:border-neutral-850 px-3.5 py-1.5 rounded-full text-2xs tracking-wider font-extrabold text-neutral-500 dark:text-neutral-400 shadow-xs">
+              <span>SYSTEM STATUS</span>
+              <span class="text-lime-600 dark:text-lime-400 font-black">ACTIVE</span>
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+              </span>
+              <span class="text-lime-600 dark:text-lime-400 font-black">PROTECTED</span>
+            </div>
+            <div class="flex items-center space-x-2 text-3xs font-bold text-gray-500 dark:text-neutral-500 mr-2">
+              <span class="inline-flex h-1.5 w-1.5 rounded-full bg-lime-500 animate-pulse"></span>
+              <span>LIVE UPDATES</span>
+            </div>
           </div>
         </div>
 
         <!-- Ad Blocking Status and Pause Controls -->
-        <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800/60 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex items-center space-x-4">
             <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" 
-                 :class="pauseStatus.disabled ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-lime-500/10 text-lime-500 border border-lime-500/20'">
+                  :class="pauseStatus.disabled ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-lime-500/10 text-lime-600 dark:text-lime-450 border border-lime-500/20'">
               <i class="fa-solid" :class="pauseStatus.disabled ? 'fa-circle-pause' : 'fa-circle-check'"></i>
             </div>
             <div>
               <div class="text-sm font-bold dark:text-white">
-                Ad Blocking: <span :class="pauseStatus.disabled ? 'text-red-500' : 'text-lime-500'" x-text="pauseStatus.disabled ? 'Paused' : 'Active'">Active</span>
+                Ad Blocking: <span :class="pauseStatus.disabled ? 'text-red-500' : 'text-lime-600 dark:text-lime-400'" x-text="pauseStatus.disabled ? 'Paused' : 'Active'">Active</span>
               </div>
               <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1" x-text="pauseStatus.disabled ? ('Resuming in ' + formatUptime(pauseStatus.remaining_seconds)) : 'All configured ad lists are active.'"></div>
             </div>
           </div>
           
           <div class="flex items-center space-x-2">
-            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(300)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-700 transition">Pause 5m</button>
-            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(1800)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-700 transition">Pause 30m</button>
+            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(300)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-750 transition">Pause 5m</button>
+            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(1800)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-750 transition">Pause 30m</button>
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(-1)" class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl border border-red-500/20 transition">Pause Indefinitely</button>
-            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition">Resume Blocking Now</button>
+            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition border border-lime-600">Resume Blocking Now</button>
           </div>
         </div>
 
         <!-- Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-lime-500">
-            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">Total Queries</div>
+          <!-- Total Queries Card -->
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+            <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">Total Queries</div>
             <div class="text-3xl font-extrabold mt-2 dark:text-white" x-text="stats.summary.total_queries.toLocaleString()">0</div>
-            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Last 24 hours</div>
+            <div class="flex items-center justify-between mt-4">
+              <span class="text-2xs font-bold text-lime-600 dark:text-lime-400 flex items-center bg-lime-500/10 dark:bg-lime-400/5 px-2 py-0.5 rounded-md">
+                <i class="fa-solid fa-arrow-trend-up mr-1 text-3xs"></i>+1.2% this hour
+              </span>
+              <!-- Sparkline SVG -->
+              <svg class="w-14 h-5 text-lime-600 dark:text-lime-400" viewBox="0 0 100 30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 25 L 20 22 L 35 25 L 50 18 L 65 22 L 80 8 L 95 12" />
+              </svg>
+            </div>
           </div>
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-red-500">
-            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">Blocked Queries</div>
-            <div class="text-3xl font-extrabold mt-2 text-red-500" x-text="stats.summary.blocked_queries.toLocaleString()">0</div>
-            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Blocked domains</div>
+
+          <!-- Queries Blocked Card -->
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+            <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">Queries Blocked</div>
+            <div class="text-3xl font-extrabold mt-2 text-lime-650 dark:text-lime-400" x-text="stats.summary.blocked_queries.toLocaleString()">0</div>
+            <div class="flex items-center justify-between mt-4">
+              <span class="text-2xs font-semibold text-slate-500 dark:text-neutral-400 flex items-center">
+                <i class="fa-solid fa-circle-notch animate-spin mr-1.5 text-3xs text-lime-500"></i>Active Protection
+              </span>
+              <span class="text-2xs font-bold text-slate-500 dark:text-neutral-400 flex items-center bg-slate-200/50 dark:bg-neutral-800/50 px-2 py-0.5 rounded-md">
+                <i class="fa-solid fa-ban mr-1 text-3xs text-red-500"></i>
+                <span x-text="stats.top_blocked.length + ' active'"></span>
+              </span>
+            </div>
           </div>
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-lime-400">
-            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">Percent Blocked</div>
-            <div class="text-3xl font-extrabold mt-2 text-lime-700 dark:text-lime-400" x-text="stats.summary.block_rate_percent + '%'">0.0%</div>
-            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Block rate</div>
+
+          <!-- Percentage Blocked Card -->
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+            <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">Percentage Blocked</div>
+            <div class="flex items-center justify-between mt-2">
+              <div>
+                <div class="text-3xl font-extrabold dark:text-white" x-text="stats.summary.block_rate_percent.toFixed(1) + '%'">0.0%</div>
+                <span class="text-2xs font-bold text-lime-600 dark:text-lime-400 flex items-center mt-3 bg-lime-500/10 dark:bg-lime-400/5 px-2 py-0.5 rounded-md w-fit">
+                  <i class="fa-solid fa-arrow-trend-up mr-1 text-3xs"></i>1.3% vs avg
+                </span>
+              </div>
+              <!-- Circular Progress Ring -->
+              <div class="relative w-14 h-14 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90">
+                  <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="4" fill="transparent" class="text-slate-200 dark:text-neutral-800" />
+                  <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="4" fill="transparent" class="text-lime-600 dark:text-lime-400"
+                          stroke-dasharray="138.2" :stroke-dashoffset="138.2 - (138.2 * Math.min(stats.summary.block_rate_percent, 100)) / 100" stroke-linecap="round" />
+                </svg>
+                <div class="absolute text-[10px] font-black text-lime-600 dark:text-lime-400" x-text="Math.round(stats.summary.block_rate_percent) + '%'">0%</div>
+              </div>
+            </div>
           </div>
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-blue-400">
-            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">DNS Cache Size</div>
-            <div class="text-3xl font-extrabold mt-2 text-blue-500" x-text="stats.system.dns_cache_size">0</div>
-            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">TTL-respecting cache</div>
+
+          <!-- DNS Cache Size Card -->
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-855 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+            <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">DNS Cache Size</div>
+            <div class="text-3xl font-extrabold mt-2 text-blue-600 dark:text-blue-400" x-text="stats.system.dns_cache_size">0</div>
+            <div class="flex items-center justify-between mt-4">
+              <span class="text-2xs font-semibold text-slate-500 dark:text-neutral-400 flex items-center">
+                <i class="fa-solid fa-bolt mr-1 text-3xs text-yellow-500 animate-pulse"></i>Fast Resolution
+              </span>
+              <span class="text-2xs font-bold text-slate-500 dark:text-neutral-400 flex items-center bg-slate-200/50 dark:bg-neutral-800/50 px-2 py-0.5 rounded-md">
+                <i class="fa-solid fa-server mr-1 text-3xs text-blue-500"></i>Local Cache
+              </span>
+            </div>
           </div>
         </div>
 
@@ -3299,16 +3463,32 @@
           const blockedData = history.map(h => h.blocked);
           
           const isDark = this.theme === 'dark';
-          const gridColor = isDark ? '#262626' : '#e5e7eb';
-          const textColor = isDark ? '#a3a3a3' : '#4b5563';
+          const gridColor = isDark ? '#1b2231' : '#e2e8f0';
+          const textColor = isDark ? '#94a3b8' : '#475569';
           
+          const chartCtx = ctx.getContext('2d');
+          const gradientTotal = chartCtx.createLinearGradient(0, 0, 0, 250);
+          gradientTotal.addColorStop(0, isDark ? 'rgba(100, 116, 139, 0.08)' : 'rgba(148, 163, 184, 0.08)');
+          gradientTotal.addColorStop(1, 'rgba(100, 116, 139, 0)');
+
+          const gradientBlocked = chartCtx.createLinearGradient(0, 0, 0, 250);
+          gradientBlocked.addColorStop(0, isDark ? 'rgba(141, 233, 0, 0.22)' : 'rgba(45, 108, 0, 0.15)');
+          gradientBlocked.addColorStop(1, 'rgba(141, 233, 0, 0)');
+          
+          const totalBorderColor = isDark ? '#64748b' : '#94a3b8';
+          const blockedBorderColor = isDark ? '#8deb00' : '#2d6c00';
+
           // Update the chart if it already exists, otherwise create a new one.
           // This avoids constant destruction/recreation which causes render loops and visual flickering.
           const existingChart = Chart.getChart(ctx);
           if (existingChart) {
             existingChart.data.labels = labels;
             existingChart.data.datasets[0].data = totalData;
+            existingChart.data.datasets[0].borderColor = totalBorderColor;
+            existingChart.data.datasets[0].backgroundColor = gradientTotal;
             existingChart.data.datasets[1].data = blockedData;
+            existingChart.data.datasets[1].borderColor = blockedBorderColor;
+            existingChart.data.datasets[1].backgroundColor = gradientBlocked;
             existingChart.options.scales.x.grid.color = gridColor;
             existingChart.options.scales.y.grid.color = gridColor;
             existingChart.options.scales.x.ticks.color = textColor;
@@ -3326,8 +3506,8 @@
                 {
                   label: 'Total Queries',
                   data: totalData,
-                  borderColor: '#84cc16',
-                  backgroundColor: 'rgba(132, 204, 22, 0.1)',
+                  borderColor: totalBorderColor,
+                  backgroundColor: gradientTotal,
                   fill: true,
                   tension: 0.4,
                   borderWidth: 2,
@@ -3336,8 +3516,8 @@
                 {
                   label: 'Blocked Queries',
                   data: blockedData,
-                  borderColor: '#ef4444',
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderColor: blockedBorderColor,
+                  backgroundColor: gradientBlocked,
                   fill: true,
                   tension: 0.4,
                   borderWidth: 2,

@@ -250,6 +250,17 @@ async def serve_dashboard():
     )
 
 
+@app.get("/logo.svg")
+async def serve_logo():
+    """Serve the ZeroSink custom ZS logo SVG."""
+    logo_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="128" fill="#0f1319"/>
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="240" fill="#8deb00" letter-spacing="-10">ZS</text>
+</svg>"""
+    from fastapi.responses import Response
+    return Response(content=logo_svg, media_type="image/svg+xml")
+
+
 @app.get("/manifest.json")
 async def serve_manifest():
     """Serve the Progressive Web App (PWA) manifest."""
@@ -258,11 +269,11 @@ async def serve_manifest():
         "short_name": "ZeroSink",
         "start_url": "/",
         "display": "standalone",
-        "theme_color": "#10B981",
-        "background_color": "#0F172A",
+        "theme_color": "#8deb00",
+        "background_color": "#0a0d14",
         "icons": [
             {
-                "src": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/shield-halved.svg",
+                "src": "/logo.svg",
                 "sizes": "512x512",
                 "type": "image/svg+xml",
                 "purpose": "any maskable"
@@ -271,6 +282,7 @@ async def serve_manifest():
     }
     from fastapi.responses import JSONResponse
     return JSONResponse(content=manifest_data)
+
 
 
 @app.get("/sw.js")
