@@ -5,7 +5,7 @@ All notable changes to the ZeroSink project will be documented in this file.
 ## [1.0.8] - 2026-06-28
 
 ### Changed
-- **Modern Line Sidebar Icons:** Revamped all dashboard navigation icons from solid (`fa-solid`) to regular (`fa-regular`) style for a cleaner, modern outline aesthetic. Includes Dashboard, Query Log, Group Manager, Parental Controls, Settings, and How to Setup.
+- **Modern Line Sidebar Icons:** Revamped dashboard navigation icons — Dashboard, Query Log, and How to Setup now use `fa-regular` (outline) style. Group Manager uses a modern `fa-sitemap` icon, while Parental Controls and Settings remain as solid for reliable rendering in FA6 Free.
 - **Theme Toggle on Login & Setup Gates:** Added a sun/moon theme toggle button to both the Login Gate and Initial Security Setup Gate, allowing users to switch between light and dark mode before authenticating. Both gates now respect the active theme with light-mode-aware backgrounds, cards, and form inputs.
 
 ## [1.0.7] - 2026-06-28
