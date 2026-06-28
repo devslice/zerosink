@@ -1200,7 +1200,9 @@ def perform_system_update(version: str, db_path: str):
                 url, 
                 headers={'User-Agent': 'ZeroSink-Updater'}
             )
-            with urllib.request.urlopen(req) as response, open(tar_path, 'wb') as out_file:
+            import ssl
+            context = ssl._create_unverified_context()
+            with urllib.request.urlopen(req, context=context) as response, open(tar_path, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
                 
             logger.info("Download complete. Extracting update...")
@@ -1208,9 +1210,9 @@ def perform_system_update(version: str, db_path: str):
             with tarfile.open(tar_path, "r:gz") as tar:
                 tar.extractall(path=tmpdir)
                 
-            extracted_dirs = [d for d in os.listdir(tmpdir) if os.path.isdir(os.path.join(tmpdir, d)) and d.startswith("zerosink")]
+            extracted_dirs = [d for d in os.listdir(tmpdir) if os.path.isdir(os.path.join(tmpdir, d))]
             if not extracted_dirs:
-                raise Exception("Could not find extracted zerosink directory in archive.")
+                raise Exception("Could not find extracted directory in archive.")
             
             src_root = os.path.join(tmpdir, extracted_dirs[0])
             

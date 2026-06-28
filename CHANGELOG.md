@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.18] - 2026-06-28
+
+### Changed
+- **Settings Layout Realignment**: Positioned the "Local DNS Records" and "Privacy & Logs" cards side-by-side on large screens by adjusting the grid column span configurations.
+- **Robust Auto-Update System**: Incorporated an unverified SSL context and generalized directory extraction within the backend's auto-update routine to bypass typical SSL/TLS trust issues and name-matching errors on Raspberry Pi and local environments.
+
 ## [1.0.16] - 2026-06-28
 
 ### Changed
