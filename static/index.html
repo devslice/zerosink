@@ -111,8 +111,11 @@
     
     <div class="w-full max-w-md p-8 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-850 rounded-2xl shadow-2xl relative z-10">
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 font-black text-lime-600 dark:text-lime-400 text-2xl mb-4 shadow-md tracking-tighter">
-          ZS
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 relative mb-4 shadow-md">
+          <svg class="w-full h-full p-2.5" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-lime-600 dark:stroke-lime-400" stroke-width="36" stroke-linejoin="round"/>
+            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-lime-600 dark:fill-lime-400" letter-spacing="-5">ZS</text>
+          </svg>
         </div>
         <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Zero<span class="text-lime-600 dark:text-lime-400 font-medium">Sink</span></h1>
         <p class="text-slate-500 dark:text-neutral-400 text-sm mt-2">Secure Home DNS Ad Blocker</p>
@@ -221,8 +224,11 @@
     
     <div class="w-full max-w-lg p-8 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-850 rounded-2xl shadow-2xl relative z-10 space-y-6">
       <div class="text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 font-black text-lime-600 dark:text-lime-400 text-2xl mb-4 shadow-md tracking-tighter">
-          ZS
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 relative mb-4 shadow-md">
+          <svg class="w-full h-full p-2.5" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-lime-600 dark:stroke-lime-400" stroke-width="36" stroke-linejoin="round"/>
+            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-lime-600 dark:fill-lime-400" letter-spacing="-5">ZS</text>
+          </svg>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Initial Security Setup</h1>
         <p class="text-slate-500 dark:text-neutral-400 text-xs mt-2">ZeroSink recommends updating your default credentials before proceeding.</p>
@@ -382,8 +388,8 @@
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
         <div class="flex items-center space-x-2">
-          <span class="text-lime-700 dark:text-lime-500"><i class="fa-solid fa-shield-halved"></i></span>
-          <span class="text-lg font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-700 dark:text-lime-500 font-medium">Sink</span></span>
+          <span class="text-lime-600 dark:text-lime-400"><i class="fa-solid fa-shield-halved"></i></span>
+          <span class="text-lg font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-600 dark:text-lime-400 font-medium">Sink</span></span>
         </div>
       </div>
       <!-- Theme Toggle -->
@@ -414,10 +420,13 @@
           <!-- Mobile layout -->
           <div class="flex md:hidden items-center justify-between w-full">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-800 flex items-center justify-center font-black text-lime-600 dark:text-lime-400 text-xl tracking-tighter shadow-sm">
-                ZS
+              <div class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-800 relative shadow-sm">
+                <svg class="w-full h-full p-1.5" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-lime-600 dark:stroke-lime-400" stroke-width="36" stroke-linejoin="round"/>
+                  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-lime-600 dark:fill-lime-400" letter-spacing="-5">ZS</text>
+                </svg>
               </div>
-              <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-700 dark:text-lime-450 font-medium">Sink</span></span>
+              <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-600 dark:text-lime-400 font-medium">Sink</span></span>
             </div>
             <button 
               @click="showMobileMenu = false" 
@@ -429,8 +438,11 @@
           
           <!-- Desktop layout (stacked ZS and ZeroSink text) -->
           <div class="hidden md:flex flex-col items-center space-y-2 w-full">
-            <div class="w-12 h-12 rounded-xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 flex items-center justify-center font-black text-lime-600 dark:text-lime-400 text-xl tracking-tighter shadow-md">
-              ZS
+            <div class="w-12 h-12 rounded-xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 relative shadow-md">
+              <svg class="w-full h-full p-2" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-lime-600 dark:stroke-lime-400" stroke-width="36" stroke-linejoin="round"/>
+                <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-lime-600 dark:fill-lime-400" letter-spacing="-5">ZS</text>
+              </svg>
             </div>
             <span class="text-3xs font-extrabold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase text-center block leading-none">ZeroSink</span>
           </div>
@@ -584,7 +596,7 @@
       <div class="p-4 border-t border-slate-200 dark:border-neutral-800 flex md:flex-col items-center justify-between md:space-y-4">
         <!-- User profile -->
         <div class="flex items-center space-x-3 md:space-x-0">
-          <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-lime-500/20 text-lime-700 dark:text-lime-400 flex items-center justify-center font-bold cursor-help" title="Admin (zerosink)">
+          <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-lime-500/20 text-lime-600 dark:bg-lime-400/10 dark:text-lime-400 flex items-center justify-center font-bold cursor-help" title="Admin (zerosink)">
             A
           </div>
           <div class="md:hidden">
@@ -632,12 +644,12 @@
               <span class="text-lime-600 dark:text-lime-400 font-black">ACTIVE</span>
               <span class="relative flex h-2 w-2">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-lime-500 dark:bg-lime-400"></span>
               </span>
               <span class="text-lime-600 dark:text-lime-400 font-black">PROTECTED</span>
             </div>
             <div class="flex items-center space-x-2 text-3xs font-bold text-gray-500 dark:text-neutral-500 mr-2">
-              <span class="inline-flex h-1.5 w-1.5 rounded-full bg-lime-500 animate-pulse"></span>
+              <span class="inline-flex h-1.5 w-1.5 rounded-full bg-lime-500 dark:bg-lime-400 animate-pulse"></span>
               <span>LIVE UPDATES</span>
             </div>
           </div>
@@ -646,8 +658,8 @@
         <!-- Ad Blocking Status and Pause Controls -->
         <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800/60 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" 
-                  :class="pauseStatus.disabled ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-lime-500/10 text-lime-600 dark:text-lime-450 border border-lime-500/20'">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border" 
+                  :class="pauseStatus.disabled ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-lime-500/10 text-lime-600 border-lime-500/20 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20'">
               <i class="fa-solid" :class="pauseStatus.disabled ? 'fa-circle-pause' : 'fa-circle-check'"></i>
             </div>
             <div>
@@ -662,7 +674,7 @@
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(300)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-750 transition">Pause 5m</button>
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(1800)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-750 transition">Pause 30m</button>
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(-1)" class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl border border-red-500/20 transition">Pause Indefinitely</button>
-            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition border border-lime-600">Resume Blocking Now</button>
+            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-lime-400 dark:hover:bg-lime-500 dark:text-neutral-950 text-xs font-bold rounded-xl transition border border-lime-600 dark:border-lime-400 shadow-md shadow-lime-500/10 dark:shadow-lime-400/5">Resume Blocking Now</button>
           </div>
         </div>
 

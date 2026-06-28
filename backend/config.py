@@ -25,4 +25,4 @@ DEFAULT_ADMIN_USER = os.environ.get("ZEROSINK_ADMIN_USER", "admin")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ZEROSINK_ADMIN_PASSWORD", "zerosink")
 
 # Application Version
-VERSION = "1.0.2"
+VERSION = "1.0.3"

@@ -2,6 +2,14 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.3] - 2026-06-28
+
+### Added
+- **Shield Shield Logo:** Updated all branding references (PWA manifest, favicon, Login Gate, Setup Gate, and vertical navigation sidebars) to feature the new vector shield badge logo enclosing the "ZS" characters.
+
+### Changed
+- **Dark Mode Contrast Improvements:** Fixed text/background contrast rules by applying neon lime green accents (`#8deb00` via `dark:bg-lime-400` / `dark:text-lime-400`) on dark text backgrounds (`text-neutral-950`), and correct blue/white combinations in light mode. Resolved typo `dark:text-lime-450` references to prevent default color dropbacks.
+
 ## [1.0.2] - 2026-06-28
 
 ### Added
