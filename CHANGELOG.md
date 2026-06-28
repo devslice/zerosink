@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.10] - 2026-06-28
+
+### Changed
+- **TOTP Autofill Compatibility:** Updated 2FA/TOTP input fields across login, setup, and settings to full semantic standards for seamless Zoho Vault autofill and automatic token copying — added explicit `id`, `name`, `inputmode="numeric"`, `pattern="[0-9]{6}"`, and verified all containers use `x-show` (not `x-if`) to remain present in the DOM for extension hooks.
+
 ## [1.0.9] - 2026-06-28
 
 ### Changed
