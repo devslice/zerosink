@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.4] - 2026-06-28
+
+### Changed
+- **Forced Dark-Themed Login & Setup:** Standardized the Login Gate and Initial Security Setup Gate to be permanently dark-themed (`bg-neutral-950` with `bg-neutral-900` card and borders). This ensures that the bright lime green brand color `#8deb00` always renders with high-contrast text (`text-neutral-950` on buttons) and maximum readability.
+
 ## [1.0.3] - 2026-06-28
 
 ### Added
