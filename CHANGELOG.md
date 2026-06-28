@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.9] - 2026-06-28
+
+### Changed
+- **Lineicons Migration:** Swapped Font Awesome for Lineicons 5.0 across the entire interface. FA retained only for the shield brand logo, password visibility toggles, brand icons (Windows/macOS), and niche icons (microchip, QR code) without LNI equivalents.
+- **Autocomplete Attributes:** Added `autocomplete` hints (`username`, `current-password`, `new-password`, `one-time-code`) to all login, setup, password change, and 2FA form fields.
+
 ## [1.0.8] - 2026-06-28
 
 ### Changed
