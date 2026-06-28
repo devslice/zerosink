@@ -13,4 +13,5 @@ When making any code changes or adding features to this repository, the agent mu
 
 4. **Git Commits & Tags**:
    - Push files to GitHub on completion.
-   - Use the `github-mcp-server` to create a GitHub Release and tag matching the new version (e.g. `v1.0.2`) with the corresponding changelog description.
+   - Use the `github-mcp-server` (or Git/GitHub CLI) to create a GitHub Release and tag matching the new version (e.g. `v1.0.2`).
+   - **CRITICAL**: Always supply detailed release notes matching the changelog description when creating the GitHub Release, as the dashboard update engine relies on this description to display update details to users.
