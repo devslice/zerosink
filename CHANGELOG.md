@@ -2,6 +2,14 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.6] - 2026-06-28
+
+### Changed
+- **Pure Shield Logo:** Removed the "ZS" lettering from the vector shield logo across both the ad blocker application and the main website, making it just the clean shield icon.
+- **Theme Color Definitions:** Re-defined dark theme background, card, border, and input colors (`darkbg`, `darkcard`, `darkborder`, `darkinput`) to use neutral values (`#0a0a0a`, `#141414`, `#262626`, `#1a1a1a`) to purge any navy-slate blue tint. Added custom neutral levels (`750`, `850`, `855`) to Tailwind configuration.
+- **Dark Mode Color Audit:** Purged remaining blue highlight styles, badges, active indicators, and chart components in Dark Mode, replacing them with brand lime `#32cd32` accents.
+- **Enforced Dark Mode Default:** Added default theme initialization in localStorage to ensure Dark Mode is active on first visit.
+
 ## [1.0.5] - 2026-06-28
 
 ### Added

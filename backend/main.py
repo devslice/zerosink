@@ -254,9 +254,8 @@ async def serve_dashboard():
 async def serve_logo():
     """Serve the ZeroSink custom ZS logo SVG."""
     logo_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <rect width="512" height="512" rx="128" fill="#0f1319"/>
+  <rect width="512" height="512" rx="128" fill="#0a0a0a"/>
   <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" fill="none" stroke="#32cd32" stroke-width="32" stroke-linejoin="round"/>
-  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" fill="#32cd32" letter-spacing="-5">ZS</text>
 </svg>"""
     from fastapi.responses import Response
     return Response(content=logo_svg, media_type="image/svg+xml")

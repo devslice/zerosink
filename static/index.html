@@ -54,10 +54,15 @@
             },
             brandgreen: '#32cd32',
             'brand-lime': '#32cd32',
-            darkbg: '#0a0d14',
-            darkcard: '#111622',
-            darkborder: '#1b2231',
-            darkinput: '#161e2b',
+            neutral: {
+              750: '#2d2d2d',
+              850: '#1f1f1f',
+              855: '#1a1a1a',
+            },
+            darkbg: '#0a0a0a',
+            darkcard: '#141414',
+            darkborder: '#262626',
+            darkinput: '#1a1a1a',
           }
         }
       }
@@ -116,7 +121,6 @@
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-neutral-950 border border-neutral-800 relative mb-4 shadow-md">
           <svg class="w-full h-full p-2.5" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-brandgreen" stroke-width="36" stroke-linejoin="round"/>
-            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-brandgreen" letter-spacing="-5">ZS</text>
           </svg>
         </div>
         <h1 class="text-3xl font-extrabold text-white tracking-tight">Zero<span class="text-brandgreen font-medium">Sink</span></h1>
@@ -229,7 +233,6 @@
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-neutral-950 border border-neutral-800 relative mb-4 shadow-md">
           <svg class="w-full h-full p-2.5" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-brandgreen" stroke-width="36" stroke-linejoin="round"/>
-            <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-brandgreen" letter-spacing="-5">ZS</text>
           </svg>
         </div>
         <h1 class="text-2xl font-extrabold text-white tracking-tight">Initial Security Setup</h1>
@@ -425,7 +428,6 @@
               <div class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-800 relative shadow-sm">
                 <svg class="w-full h-full p-1.5" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-lime-600 dark:stroke-lime-400" stroke-width="36" stroke-linejoin="round"/>
-                  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-lime-600 dark:fill-lime-400" letter-spacing="-5">ZS</text>
                 </svg>
               </div>
               <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-600 dark:text-lime-400 font-medium">Sink</span></span>
@@ -443,7 +445,6 @@
             <div class="w-12 h-12 rounded-xl bg-slate-200/80 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 relative shadow-md">
               <svg class="w-full h-full p-2" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M256,50 C256,50 140,90 140,190 C140,320 256,430 256,430 C256,430 372,320 372,190 C372,90 256,50 256,50 Z" class="stroke-lime-600 dark:stroke-lime-400" stroke-width="36" stroke-linejoin="round"/>
-                <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="160" class="fill-lime-600 dark:fill-lime-400" letter-spacing="-5">ZS</text>
               </svg>
             </div>
             <span class="text-3xs font-extrabold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase text-center block leading-none">ZeroSink</span>
@@ -703,7 +704,7 @@
             <div class="text-3xl font-extrabold mt-2 text-lime-650 dark:text-lime-400" x-text="stats.summary.blocked_queries.toLocaleString()">0</div>
             <div class="flex items-center justify-between mt-4">
               <span class="text-2xs font-semibold text-slate-500 dark:text-neutral-400 flex items-center">
-                <i class="fa-solid fa-circle-notch animate-spin mr-1.5 text-3xs text-lime-500"></i>Active Protection
+                <i class="fa-solid fa-circle-notch animate-spin mr-1.5 text-3xs text-lime-500 dark:text-lime-400"></i>Active Protection
               </span>
               <span class="text-2xs font-bold text-slate-500 dark:text-neutral-400 flex items-center bg-slate-200/50 dark:bg-neutral-800/50 px-2 py-0.5 rounded-md">
                 <i class="fa-solid fa-ban mr-1 text-3xs text-red-500"></i>
@@ -775,7 +776,7 @@
 
           <!-- Top Allowed -->
           <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm">
-            <h3 class="text-lg font-bold mb-4 text-lime-500"><i class="fa-solid fa-check-double mr-2"></i>Top Allowed Domains</h3>
+            <h3 class="text-lg font-bold mb-4 text-lime-500 dark:text-brand-lime"><i class="fa-solid fa-check-double mr-2"></i>Top Allowed Domains</h3>
             <div class="space-y-3 max-h-80 overflow-y-auto">
               <template x-for="d in stats.top_allowed" :key="d.domain">
                 <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 dark:border-neutral-800 last:border-0">
@@ -881,7 +882,7 @@
                           ? 'bg-red-500/10 text-red-500 border-red-500/20' 
                           : log.status.includes('Whitelist')
                             ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20'
-                            : 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-500/20'"
+                            : 'bg-lime-500/10 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400 border-lime-500/20 dark:border-brand-lime/20'"
                         x-text="log.status"
                       ></span>
                     </td>
@@ -925,8 +926,8 @@
                 @click="selectedGroupId = g.id; loadGroupDetails(g.id); mobileShowDetails = true"
                 class="p-4 rounded-xl border cursor-pointer transition relative"
                 :class="selectedGroupId === g.id 
-                  ? 'bg-lime-500/10 border-lime-500 text-lime-700 dark:text-lime-400' 
-                  : 'bg-white dark:bg-darkcard border-gray-100 dark:border-neutral-800 hover:border-lime-500/40 text-gray-700 dark:text-neutral-300'"
+                  ? 'bg-lime-500/10 border-lime-500 dark:bg-brand-lime/10 dark:border-brand-lime text-lime-700 dark:text-lime-400' 
+                  : 'bg-white dark:bg-darkcard border-gray-100 dark:border-neutral-800 hover:border-lime-500/40 dark:hover:border-brand-lime/40 text-gray-700 dark:text-neutral-300'"
               >
                 <div class="font-bold text-sm tracking-tight pr-6" x-text="g.name"></div>
                 <div class="text-xs text-gray-600 dark:text-neutral-400 truncate mt-1" x-text="g.description || 'No description'"></div>
@@ -977,21 +978,21 @@
               <button 
                 @click="activeGroupSubTab = 'clients'" 
                 class="px-4 py-2 rounded-xl text-xs font-bold transition focus:outline-none"
-                :class="activeGroupSubTab === 'clients' ? 'bg-lime-500 text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+                :class="activeGroupSubTab === 'clients' ? 'bg-lime-500 dark:bg-brand-lime text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
               >
                 <i class="fa-solid fa-laptop mr-1.5"></i>Clients
               </button>
               <button 
                 @click="activeGroupSubTab = 'adlists'" 
                 class="px-4 py-2 rounded-xl text-xs font-bold transition focus:outline-none"
-                :class="activeGroupSubTab === 'adlists' ? 'bg-lime-500 text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+                :class="activeGroupSubTab === 'adlists' ? 'bg-lime-500 dark:bg-brand-lime text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
               >
                 <i class="fa-solid fa-globe mr-1.5"></i>Blocklists
               </button>
               <button 
                 @click="activeGroupSubTab = 'rules'" 
                 class="px-4 py-2 rounded-xl text-xs font-bold transition focus:outline-none"
-                :class="activeGroupSubTab === 'rules' ? 'bg-lime-500 text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+                :class="activeGroupSubTab === 'rules' ? 'bg-lime-500 dark:bg-brand-lime text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
               >
                 <i class="fa-solid fa-shield-halved mr-1.5"></i>Custom Domains
               </button>
@@ -1368,7 +1369,7 @@
               </div>
             </div>
             
-            <div class="p-3 bg-lime-500/10 border border-lime-500/20 text-lime-500 rounded-xl text-xs">
+            <div class="p-3 bg-lime-500/10 dark:bg-brand-lime/10 border border-lime-500/20 dark:border-brand-lime/20 text-lime-500 dark:text-brand-lime rounded-xl text-xs">
               <i class="fa-solid fa-microchip mr-1.5"></i>Optimized for single-core Raspberry Pi Zero 2 W with 512MB RAM.
             </div>
           </div>
@@ -1387,7 +1388,7 @@
                 </div>
                 <div class="text-right">
                   <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">Latest Version</span>
-                  <span class="font-bold font-mono" :class="updateAvailable ? 'text-amber-500 font-bold' : 'text-lime-600 font-bold'" x-text="latestVersion ? 'v' + latestVersion : 'Checking...'">Checking...</span>
+                  <span class="font-bold font-mono" :class="updateAvailable ? 'text-amber-500 font-bold' : 'text-lime-600 dark:text-lime-400 font-bold'" x-text="latestVersion ? 'v' + latestVersion : 'Checking...'">Checking...</span>
                 </div>
               </div>
 
@@ -1403,7 +1404,7 @@
               </div>
 
               <!-- Updating State -->
-              <div x-show="updating" class="p-4 bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 rounded-xl space-y-2" x-cloak>
+              <div x-show="updating" class="p-4 bg-lime-500/10 dark:bg-brand-lime/10 border border-lime-500/20 dark:border-brand-lime/20 text-lime-700 dark:text-lime-400 rounded-xl space-y-2" x-cloak>
                 <div class="flex items-center gap-2 font-bold text-xs">
                   <span class="animate-spin"><i class="fa-solid fa-spinner"></i></span>
                   <span x-text="updateMessage">Updating system...</span>
@@ -1760,7 +1761,7 @@
         <div x-show="!premiumActive" class="space-y-6">
           <div class="bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-8 rounded-3xl shadow-xl max-w-3xl flex flex-col md:flex-row gap-8 items-center">
             <div class="space-y-4 md:w-2/3">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-lime-500/10 text-lime-700 dark:text-lime-400 border border-lime-500/20">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-lime-500/10 dark:bg-brand-lime/10 text-lime-700 dark:text-lime-400 border border-lime-500/20 dark:border-brand-lime/20">
                 Premium Add-on
               </span>
               <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Protect Your Family Online</h3>
@@ -1817,13 +1818,13 @@
           <!-- Subscription management header -->
           <div class="bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 bg-lime-500/10 text-lime-600 dark:text-lime-400 rounded-2xl flex items-center justify-center text-xl">
+              <div class="w-12 h-12 bg-lime-500/10 dark:bg-brand-lime/10 text-lime-600 dark:text-lime-400 rounded-2xl flex items-center justify-center text-xl">
                 <i class="fa-solid fa-crown"></i>
               </div>
               <div>
                 <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   ZeroSink Premium Parental Controls
-                  <span class="px-2 py-0.5 rounded bg-lime-500/15 text-lime-600 dark:text-lime-400 text-4xs font-bold uppercase tracking-wide">Active</span>
+                  <span class="px-2 py-0.5 rounded bg-lime-500/15 dark:bg-brand-lime/15 text-lime-600 dark:text-lime-400 text-4xs font-bold uppercase tracking-wide">Active</span>
                 </div>
                 <div class="text-2xs text-slate-500 dark:text-neutral-400 mt-0.5" x-text="'Subscription license valid until ' + formatDate(premiumExpiresAt)"></div>
               </div>
@@ -2063,7 +2064,7 @@
                     <button 
                       @click="newDowntimeDays.includes(day) ? newDowntimeDays = newDowntimeDays.filter(d => d !== day) : newDowntimeDays.push(day)" 
                       class="px-2 py-1.5 rounded-lg text-3xs font-semibold transition border duration-105"
-                      :class="newDowntimeDays.includes(day) ? 'bg-lime-500 border-lime-500 text-neutral-950' : 'bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700'"
+                      :class="newDowntimeDays.includes(day) ? 'bg-lime-500 border-lime-500 dark:bg-brand-lime dark:border-brand-lime text-neutral-950' : 'bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700'"
                       x-text="day"
                     ></button>
                   </template>
@@ -2112,7 +2113,7 @@
         </div>
 
         <!-- Highlight Card -->
-        <div class="bg-lime-500/10 border border-lime-500/20 p-6 rounded-2xl shadow-sm space-y-3">
+        <div class="bg-lime-500/10 dark:bg-brand-lime/10 border border-lime-500/20 dark:border-brand-lime/20 p-6 rounded-2xl shadow-sm space-y-3">
           <h3 class="text-lg font-bold text-lime-700 dark:text-lime-400 flex items-center gap-2">
             <i class="fa-solid fa-circle-info"></i> Your ZeroSink DNS IP Address
           </h3>
@@ -2370,6 +2371,11 @@
         pauseTimer: null,
 
         init() {
+          // Force dark theme as the default if not set
+          if (!localStorage.getItem('zerosink_theme')) {
+            localStorage.setItem('zerosink_theme', 'dark');
+            this.theme = 'dark';
+          }
           // Dark mode class toggle
           document.documentElement.classList.toggle('dark', this.theme === 'dark');
           
@@ -3477,19 +3483,19 @@
           const blockedData = history.map(h => h.blocked);
           
           const isDark = this.theme === 'dark';
-          const gridColor = isDark ? '#1b2231' : '#e2e8f0';
-          const textColor = isDark ? '#94a3b8' : '#475569';
+          const gridColor = isDark ? '#262626' : '#e2e8f0';
+          const textColor = isDark ? '#a3a3a3' : '#475569';
           
           const chartCtx = ctx.getContext('2d');
           const gradientTotal = chartCtx.createLinearGradient(0, 0, 0, 250);
-          gradientTotal.addColorStop(0, isDark ? 'rgba(100, 116, 139, 0.08)' : 'rgba(148, 163, 184, 0.08)');
+          gradientTotal.addColorStop(0, isDark ? 'rgba(163, 163, 163, 0.08)' : 'rgba(148, 163, 184, 0.08)');
           gradientTotal.addColorStop(1, 'rgba(100, 116, 139, 0)');
 
           const gradientBlocked = chartCtx.createLinearGradient(0, 0, 0, 250);
           gradientBlocked.addColorStop(0, isDark ? 'rgba(50, 205, 50, 0.22)' : 'rgba(29, 78, 216, 0.15)');
           gradientBlocked.addColorStop(1, 'rgba(50, 205, 50, 0)');
           
-          const totalBorderColor = isDark ? '#64748b' : '#94a3b8';
+          const totalBorderColor = isDark ? '#737373' : '#94a3b8';
           const blockedBorderColor = isDark ? '#32cd32' : '#1d4ed8';
 
           // Update the chart if it already exists, otherwise create a new one.
