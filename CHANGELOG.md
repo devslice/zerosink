@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.20] - 2026-06-28
+
+### Changed
+- **Secure Stripe Proxy Integration**: Moved Stripe subscription validation to a secure, custom Cloudflare Worker proxy (`zerosink-licensing`) hosted on your domain. This eliminates the need to hardcode or store your Stripe API Secret Key inside the client application, keeping your Stripe account fully secure.
+
 ## [1.0.19] - 2026-06-28
 
 ### Changed

@@ -1534,11 +1534,10 @@ async def delete_dhcp_lease_api(mac_address: str, current_user: dict = Depends(g
 import urllib.request
 import urllib.parse
 import socket
-import base64
 from datetime import datetime, timedelta
 
 def verify_stripe_subscription(subscription_id: str) -> dict:
-    from backend.config import STRIPE_SECRET_KEY, STRIPE_PRICE_ID
+    from backend.config import ZEROSINK_LICENSING_URL
     
     clean_id = subscription_id.strip()
     
@@ -1552,59 +1551,25 @@ def verify_stripe_subscription(subscription_id: str) -> dict:
     if not clean_id.startswith("sub_"):
         return {"activated": False, "error": "Invalid subscription ID format. Should start with 'sub_'"}
         
-    if not STRIPE_SECRET_KEY:
-        return {"activated": False, "error": "Stripe API key not configured on server."}
+    if not ZEROSINK_LICENSING_URL:
+        return {"activated": False, "error": "Licensing server URL not configured."}
 
-    url = f"https://api.stripe.com/v1/subscriptions/{clean_id}"
+    url = f"{ZEROSINK_LICENSING_URL}?sub_id={clean_id}"
     req = urllib.request.Request(url, method="GET")
-    
-    auth_str = f"{STRIPE_SECRET_KEY}:"
-    auth_b64 = base64.b64encode(auth_str.encode("utf-8")).decode("utf-8")
-    req.add_header("Authorization", f"Basic {auth_b64}")
     req.add_header("Accept", "application/json")
     
     try:
         with urllib.request.urlopen(req, timeout=10) as response:
             res_body = response.read()
-            data = json.loads(res_body.decode("utf-8"))
-            
-            status = data.get("status")
-            if status not in ("active", "trialing"):
-                return {"activated": False, "error": f"Subscription is not active (Status: {status})"}
-                
-            items = data.get("items", {}).get("data", [])
-            has_matching_price = False
-            for item in items:
-                price_id = item.get("price", {}).get("id")
-                if price_id == STRIPE_PRICE_ID:
-                    has_matching_price = True
-                    break
-                    
-            if not has_matching_price:
-                return {"activated": False, "error": f"Subscription does not contain expected price ID: {STRIPE_PRICE_ID}"}
-                
-            current_period_end = data.get("current_period_end")
-            if current_period_end:
-                expires_at = datetime.utcfromtimestamp(current_period_end).isoformat() + "Z"
-            else:
-                expires_at = (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
-                
-            return {
-                "activated": True,
-                "status": "active",
-                "expires_at": expires_at
-            }
-            
+            return json.loads(res_body.decode("utf-8"))
     except urllib.error.HTTPError as e:
         try:
             res_body = e.read()
-            err_data = json.loads(res_body.decode("utf-8"))
-            err_msg = err_data.get("error", {}).get("message") or f"HTTP Error {e.code}"
-            return {"activated": False, "error": err_msg}
+            return json.loads(res_body.decode("utf-8"))
         except Exception:
-            return {"activated": False, "error": f"Stripe API HTTP Error: {e.code}"}
+            return {"activated": False, "error": f"Licensing server HTTP Error: {e.code}"}
     except Exception as e:
-        return {"activated": False, "error": f"Failed to connect to Stripe API: {str(e)}"}
+        return {"activated": False, "error": f"Failed to connect to licensing server: {str(e)}"}
 
 @app.get("/api/premium/status")
 async def get_premium_status(current_user: dict = Depends(get_current_user)):
