@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.14] - 2026-06-28
+
+### Changed
+- **Autofill & Auto-login Synchronization:** Fixed password manager auto-login and automatic TOTP code entry by initializing Alpine.js state variables (`loginUsername`, `loginPassword`, `login2faCode`) directly from pre-filled DOM elements on page load, and preventing the 2FA transition from clearing existing TOTP codes. Added support to automatically verify 2FA immediately if a 6-digit code has been pre-filled.
+
 ## [1.0.13] - 2026-06-28
 
 ### Changed

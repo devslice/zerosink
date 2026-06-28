@@ -2227,11 +2227,11 @@
  theme: localStorage.getItem('zerosink_theme') || 'dark',
  activeTab: 'dashboard',
  
- loginUsername: '',
- loginPassword: '',
+ loginUsername: (document.getElementById('username') && document.getElementById('username').value) || '',
+ loginPassword: (document.getElementById('password') && document.getElementById('password').value) || '',
  loginError: '',
  require2fa: false,
- login2faCode: '',
+ login2faCode: (document.getElementById('totp') && document.getElementById('totp').value) || '',
  temp2faToken: '',
  
  // Update Notification State
@@ -2541,7 +2541,17 @@
  if (data.require_2fa) {
  this.require2fa = true;
  this.temp2faToken = data.temp_token;
+ // Preserve programmatic or pre-filled TOTP codes from password managers
+ const totpEl = document.getElementById('totp');
+ const existingCode = (totpEl && totpEl.value) || this.login2faCode;
+ if (existingCode && /^[0-9]{6}$/.test(existingCode.trim())) {
+ this.login2faCode = existingCode.trim();
+ this.$nextTick(() => {
+ this.verify2fa();
+ });
+ } else {
  this.login2faCode = '';
+ }
  return;
  }
  
