@@ -2,6 +2,13 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.15] - 2026-06-28
+
+### Changed
+- **Advanced Password Manager Compatibility**: Wrapped the TOTP verification screen in a dynamic Alpine.js `x-if` template to force password managers to re-scan the DOM upon transition. Equipped the TOTP input with an auto-focus hook (`$nextTick(() => $el.focus())`) and a programmatic value interceptor directly inside `x-init`.
+- **Form Submission Interception**: Overrode the native `form.submit` method in the login gate to route all programmatic form submissions (triggered by some password managers) through the Alpine `@submit` handler, resolving the issue where auto-login bypassed application logic and rendered raw JSON responses.
+- **Material Design Icons Migration**: Replaced all Lineicons and Font Awesome icons (including the shield logo, sidebar tabs, and configuration badges) with Google Material Design Icons (MDI) via CDN.
+
 ## [1.0.14] - 2026-06-28
 
 ### Changed
