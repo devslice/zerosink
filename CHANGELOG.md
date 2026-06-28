@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.19] - 2026-06-28
+
+### Changed
+- **Stripe Subscription Licensing**: Migrated the premium verification flow from Lemon Squeezy to direct Stripe API integration, validating customers via their Stripe Subscription ID (`sub_...`).
+- **Dashboard Pricing & Layout Update**: Updated the checkout pricing display to £2.99/month and adjusted labels, placeholders, and links to support direct Stripe Checkout and customer portal billing redirection.
+
 ## [1.0.18] - 2026-06-28
 
 ### Changed

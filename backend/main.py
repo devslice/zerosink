@@ -1529,61 +1529,86 @@ async def delete_dhcp_lease_api(mac_address: str, current_user: dict = Depends(g
     return {"status": "success"}
 
 
-# --- Premium Parental Controls & Lemon Squeezy Endpoints ---
+# --- Premium Parental Controls & Stripe Endpoints ---
 
 import urllib.request
 import urllib.parse
 import socket
+import base64
 from datetime import datetime, timedelta
 
-def verify_lemon_squeezy_license(license_key: str) -> dict:
-    clean_key = license_key.strip().lower()
-    if clean_key in ("sandbox", "test-license-key") or clean_key.startswith("test_"):
+def verify_stripe_subscription(subscription_id: str) -> dict:
+    from backend.config import STRIPE_SECRET_KEY, STRIPE_PRICE_ID
+    
+    clean_id = subscription_id.strip()
+    
+    if clean_id.lower() in ("sandbox", "test-license-key") or clean_id.lower().startswith("test_"):
         return {
             "activated": True,
-            "license_key": {
-                "status": "active",
-                "key": license_key,
-                "expires_at": (datetime.utcnow() + timedelta(days=365)).isoformat() + "Z"
-            },
-            "meta": {
-                "product_name": "ZeroSink Premium Sandbox",
-                "subscription_id": 999999,
-                "subscription_status": "active",
-                "expires_at": (datetime.utcnow() + timedelta(days=365)).isoformat() + "Z"
-            }
+            "status": "active",
+            "expires_at": (datetime.utcnow() + timedelta(days=365)).isoformat() + "Z"
         }
         
-    url = "https://api.lemonsqueezy.com/v1/licenses/activate"
-    data = {
-        "license_key": license_key.strip(),
-        "instance_name": socket.gethostname()
-    }
-    req_data = json.dumps(data).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=req_data,
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        method="POST"
-    )
+    if not clean_id.startswith("sub_"):
+        return {"activated": False, "error": "Invalid subscription ID format. Should start with 'sub_'"}
+        
+    if not STRIPE_SECRET_KEY:
+        return {"activated": False, "error": "Stripe API key not configured on server."}
+
+    url = f"https://api.stripe.com/v1/subscriptions/{clean_id}"
+    req = urllib.request.Request(url, method="GET")
+    
+    auth_str = f"{STRIPE_SECRET_KEY}:"
+    auth_b64 = base64.b64encode(auth_str.encode("utf-8")).decode("utf-8")
+    req.add_header("Authorization", f"Basic {auth_b64}")
+    req.add_header("Accept", "application/json")
+    
     try:
         with urllib.request.urlopen(req, timeout=10) as response:
             res_body = response.read()
-            return json.loads(res_body.decode("utf-8"))
+            data = json.loads(res_body.decode("utf-8"))
+            
+            status = data.get("status")
+            if status not in ("active", "trialing"):
+                return {"activated": False, "error": f"Subscription is not active (Status: {status})"}
+                
+            items = data.get("items", {}).get("data", [])
+            has_matching_price = False
+            for item in items:
+                price_id = item.get("price", {}).get("id")
+                if price_id == STRIPE_PRICE_ID:
+                    has_matching_price = True
+                    break
+                    
+            if not has_matching_price:
+                return {"activated": False, "error": f"Subscription does not contain expected price ID: {STRIPE_PRICE_ID}"}
+                
+            current_period_end = data.get("current_period_end")
+            if current_period_end:
+                expires_at = datetime.utcfromtimestamp(current_period_end).isoformat() + "Z"
+            else:
+                expires_at = (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
+                
+            return {
+                "activated": True,
+                "status": "active",
+                "expires_at": expires_at
+            }
+            
     except urllib.error.HTTPError as e:
         try:
             res_body = e.read()
-            return json.loads(res_body.decode("utf-8"))
+            err_data = json.loads(res_body.decode("utf-8"))
+            err_msg = err_data.get("error", {}).get("message") or f"HTTP Error {e.code}"
+            return {"activated": False, "error": err_msg}
         except Exception:
-            return {"activated": False, "error": f"API Error: HTTP {e.code}"}
+            return {"activated": False, "error": f"Stripe API HTTP Error: {e.code}"}
     except Exception as e:
-        return {"activated": False, "error": f"Failed to connect to licensing server: {str(e)}"}
+        return {"activated": False, "error": f"Failed to connect to Stripe API: {str(e)}"}
 
 @app.get("/api/premium/status")
 async def get_premium_status(current_user: dict = Depends(get_current_user)):
+    from backend.config import STRIPE_CHECKOUT_URL
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT key, value FROM settings WHERE key IN ('premium_license_key', 'premium_license_status', 'premium_license_expires_at')")
@@ -1610,29 +1635,26 @@ async def get_premium_status(current_user: dict = Depends(get_current_user)):
         "active": is_active,
         "license_key": settings_dict.get("premium_license_key", ""),
         "expires_at": expires_at_str,
-        "customer_portal_url": "https://my.lemonsqueezy.com/billing" if is_active else None
+        "customer_portal_url": "https://billing.stripe.com" if is_active else None,
+        "checkout_url": STRIPE_CHECKOUT_URL
     }
 
 @app.post("/api/premium/activate")
 async def activate_premium(req: PremiumLicenseRequest, current_user: dict = Depends(get_current_user)):
-    res = verify_lemon_squeezy_license(req.license_key)
+    res = verify_stripe_subscription(req.license_key)
     
     if not res.get("activated"):
-        error_msg = res.get("error") or "Invalid license key or activation failed."
+        error_msg = res.get("error") or "Invalid subscription or activation failed."
         raise HTTPException(status_code=400, detail=error_msg)
         
-    meta = res.get("meta", {})
-    sub_status = meta.get("subscription_status", "active")
+    expires_at = res.get("expires_at")
+    sub_status = res.get("status", "active")
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    expires_at = meta.get("expires_at")
-    if not expires_at:
-        expires_at = (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
-        
     cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_key', ?)", (req.license_key.strip(),))
-    cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_status', ?)", ("active" if sub_status in ("active", "on_trial") else "inactive",))
+    cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_status', ?)", ("active" if sub_status == "active" else "inactive",))
     cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_expires_at', ?)", (expires_at,))
     conn.commit()
     conn.close()

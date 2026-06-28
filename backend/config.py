@@ -25,5 +25,10 @@ DEFAULT_ADMIN_USER = os.environ.get("ZEROSINK_ADMIN_USER", "admin")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ZEROSINK_ADMIN_PASSWORD", "zerosink")
 
 # Application Version
-VERSION = "1.0.18"
+VERSION = "1.0.19"
+
+# Stripe Settings
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "price_1TnMpcP4p1ovWS4ZUV3Aphkv")
+STRIPE_CHECKOUT_URL = os.environ.get("STRIPE_CHECKOUT_URL", "https://buy.stripe.com/test_aFa00lfaT7ZYgTm5LufMA00")
 
