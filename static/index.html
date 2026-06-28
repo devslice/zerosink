@@ -1,0 +1,3527 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZeroSink | DNS Ad Blocker</title>
+  <link rel="manifest" href="/manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered with scope:', reg.scope))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- QRious CDN for 2FA QR code generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            lime: {
+              400: '#a3e635',
+              500: '#84cc16',
+              600: '#65a30d',
+              700: '#4d7c0f',
+            },
+            darkbg: '#121212',
+            darkcard: '#1e1e1e',
+            darkinput: '#2a2a2a',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+    /* Scrollbar style */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    .dark ::-webkit-scrollbar-track { background: #121212; }
+    .dark ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #84cc16; }
+    
+    ::-webkit-scrollbar-track { background: #f3f4f6; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #84cc16; }
+  </style>
+</head>
+<body 
+  x-data="zeroSinkApp()" 
+  x-init="init()"
+  class="bg-slate-100 text-slate-800 dark:bg-darkbg dark:text-gray-100 min-h-screen font-sans antialiased transition-colors duration-200"
+>
+
+  <!-- TOAST NOTIFICATION -->
+  <div 
+    x-show="toast.show" 
+    x-transition:enter="transition ease-out duration-300 transform"
+    x-transition:enter-start="opacity-0 translate-y-2"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-200 transform"
+    x-transition:leave-start="opacity-100 translate-y-0"
+    x-transition:leave-end="opacity-0 translate-y-2"
+    x-cloak
+    class="fixed bottom-5 right-5 z-50 flex items-center p-4 rounded-lg shadow-lg border border-lime-500/30 backdrop-blur-md"
+    :class="toast.type === 'success' ? 'bg-lime-950/80 text-lime-400' : 'bg-red-950/80 text-red-400'"
+  >
+    <span class="mr-2">
+      <i class="fa-solid" :class="toast.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
+    </span>
+    <span x-text="toast.message" class="text-sm font-semibold"></span>
+  </div>
+
+  <!-- ==================== LOGIN GATE ==================== -->
+  <div 
+    x-show="!token && !requireSetup" 
+    class="flex items-center justify-center min-h-screen bg-neutral-950 relative overflow-hidden"
+    x-cloak
+  >
+    <!-- Background glowing accents -->
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-lime-500/10 blur-[120px] -top-52 -left-52"></div>
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-lime-500/10 blur-[120px] -bottom-52 -right-52"></div>
+    
+    <div class="w-full max-w-md p-8 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl relative z-10">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-lime-500/10 border border-lime-500/30 text-lime-400 text-3xl mb-4">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold text-white tracking-tight">Zero<span class="text-lime-500 font-medium">Sink</span></h1>
+        <p class="text-neutral-400 text-sm mt-2">Secure Home DNS Ad Blocker</p>
+      </div>
+
+      <!-- Step 1: Password Login -->
+      <form x-show="!require2fa" @submit.prevent="login()" class="space-y-6">
+        <div>
+          <label class="block text-sm font-semibold text-neutral-300 mb-2">Admin Username</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+              <i class="fa-solid fa-user"></i>
+            </span>
+            <input 
+              type="text" 
+              x-model="loginUsername" 
+              class="w-full pl-10 pr-4 py-3 bg-neutral-950 border border-neutral-800 focus:border-lime-500 focus:ring-1 focus:ring-lime-500 rounded-xl text-white placeholder-neutral-600 focus:outline-none transition" 
+              placeholder="Username" 
+              :required="!require2fa"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-neutral-300 mb-2">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input 
+              :type="showLoginPassword ? 'text' : 'password'" 
+              x-model="loginPassword" 
+              class="w-full pl-10 pr-10 py-3 bg-neutral-950 border border-neutral-800 focus:border-lime-500 focus:ring-1 focus:ring-lime-500 rounded-xl text-white placeholder-neutral-600 focus:outline-none transition" 
+              placeholder="Password" 
+              :required="!require2fa"
+            >
+            <button type="button" @click="showLoginPassword = !showLoginPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+              <i class="fa-solid" :class="showLoginPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div x-show="loginError" class="p-3 rounded-lg bg-red-950/50 border border-red-500/30 text-red-400 text-xs font-semibold" x-text="loginError"></div>
+
+        <button 
+          type="submit" 
+          class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 active:scale-[0.98] text-neutral-950 font-bold rounded-xl transition shadow-lg shadow-lime-500/20"
+        >
+          Access Dashboard
+        </button>
+      </form>
+
+      <!-- Step 2: 2FA Verification -->
+      <form x-show="require2fa" @submit.prevent="verify2fa()" class="space-y-6" x-cloak>
+        <div>
+          <label class="block text-sm font-semibold text-neutral-300 mb-2">Two-Factor Authenticator Code</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+              <i class="fa-solid fa-key"></i>
+            </span>
+            <input 
+              type="text" 
+              x-model="login2faCode" 
+              class="w-full pl-10 pr-4 py-3 bg-neutral-950 border border-neutral-800 focus:border-lime-500 focus:ring-1 focus:ring-lime-500 rounded-xl text-white placeholder-neutral-600 text-center tracking-[0.5em] text-lg focus:outline-none transition" 
+              placeholder="000000" 
+              maxlength="6"
+              pattern="[0-9]{6}"
+              inputmode="numeric"
+              :required="require2fa"
+            >
+          </div>
+          <p class="text-neutral-500 text-xs mt-2 text-center">Enter the 6-digit verification code from your authenticator app.</p>
+        </div>
+
+        <div x-show="loginError" class="p-3 rounded-lg bg-red-950/50 border border-red-500/30 text-red-400 text-xs font-semibold" x-text="loginError"></div>
+
+        <div class="flex gap-3">
+          <button 
+            type="button"
+            @click="require2fa = false; login2faCode = ''; temp2faToken = ''; loginError = ''"
+            class="w-1/3 py-3 px-4 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-xl transition border border-neutral-700"
+          >
+            Back
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 py-3 px-4 bg-lime-500 hover:bg-lime-600 active:scale-[0.98] text-neutral-950 font-bold rounded-xl transition shadow-lg shadow-lime-500/20"
+          >
+            Verify & Enter
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ==================== INITIAL SETUP GATE ==================== -->
+  <div 
+    x-show="requireSetup" 
+    class="flex items-center justify-center min-h-screen bg-neutral-950 relative overflow-hidden"
+    x-cloak
+  >
+    <!-- Background glowing accents -->
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-lime-500/10 blur-[120px] -top-52 -left-52"></div>
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-lime-500/10 blur-[120px] -bottom-52 -right-52"></div>
+    
+    <div class="w-full max-w-lg p-8 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl relative z-10 space-y-6">
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-lime-500/10 border border-lime-500/30 text-lime-400 text-3xl mb-4">
+          <i class="fa-solid fa-user-gear"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-white tracking-tight">Initial Security Setup</h1>
+        <p class="text-neutral-400 text-xs mt-2">ZeroSink recommends updating your default credentials before proceeding.</p>
+      </div>
+
+      <form @submit.prevent="completeSetup(false)" class="space-y-6">
+        <!-- Part 1: Change Password -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-lime-400 border-b border-neutral-800 pb-2">
+            <i class="fa-solid fa-key mr-2"></i>1. Update Administrator Password
+          </h3>
+          
+          <div>
+            <label class="block text-xs font-semibold text-neutral-300 mb-1">New Password</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input 
+                :type="showSetupPassword ? 'text' : 'password'" 
+                x-model="setupNewPassword" 
+                class="w-full pl-10 pr-10 py-2.5 bg-neutral-950 border border-neutral-800 focus:border-lime-500 focus:ring-1 focus:ring-lime-500 rounded-xl text-white text-sm placeholder-neutral-600 focus:outline-none transition" 
+                placeholder="Leave blank to keep current"
+              >
+              <button type="button" @click="showSetupPassword = !showSetupPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+                <i class="fa-solid" :class="showSetupPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-300 mb-1">Confirm New Password</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input 
+                :type="showSetupConfirmPassword ? 'text' : 'password'" 
+                x-model="setupConfirmPassword" 
+                class="w-full pl-10 pr-10 py-2.5 bg-neutral-950 border border-neutral-800 focus:border-lime-500 focus:ring-1 focus:ring-lime-500 rounded-xl text-white text-sm placeholder-neutral-600 focus:outline-none transition" 
+                placeholder="Confirm new password"
+                :required="setupNewPassword.length > 0"
+              >
+              <button type="button" @click="showSetupConfirmPassword = !showSetupConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+                <i class="fa-solid" :class="showSetupConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 2: Setup 2FA Option -->
+        <div class="space-y-4 pt-2">
+          <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+            <h3 class="text-sm font-semibold text-lime-400">
+              <i class="fa-solid fa-shield-halved mr-2"></i>2. Configure 2FA (Optional)
+            </h3>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                x-model="setupTotpEnabled" 
+                @change="if (setupTotpEnabled && !setupTotpSecret) generateSetup2fa()"
+                class="sr-only peer"
+              >
+              <div class="w-9 h-5 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 peer-checked:after:bg-neutral-950"></div>
+            </label>
+          </div>
+
+          <div x-show="setupTotpEnabled" x-transition class="space-y-4" x-cloak>
+            <p class="text-neutral-400 text-xs">Scan the QR code below using your authenticator application (Google Authenticator, Microsoft Authenticator, Authy, etc.):</p>
+            
+            <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-neutral-800 max-w-[200px] mx-auto">
+              <canvas id="setupTotpQrCanvas" class="w-44 h-44"></canvas>
+            </div>
+
+            <div class="text-center">
+              <span class="text-neutral-500 text-3xs block uppercase font-semibold">Secret Key</span>
+              <code class="text-xs font-mono text-lime-400 font-bold select-all tracking-wider" x-text="setupTotpSecret"></code>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-neutral-300 mb-1">Confirm 6-Digit Code</label>
+              <input 
+                type="text" 
+                x-model="setupTotpCode" 
+                placeholder="000000" 
+                maxlength="6" 
+                class="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm text-white text-center tracking-widest font-bold" 
+                :required="setupTotpEnabled"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 3: Seed Curated Blocklists -->
+        <div class="space-y-4 pt-2">
+          <h3 class="text-sm font-semibold text-lime-400 border-b border-neutral-800 pb-2">
+            <i class="fa-solid fa-list-check mr-2"></i>3. Curated Protection Lists
+          </h3>
+          <p class="text-neutral-400 text-xs">ZeroSink includes a basic ad-blocking list by default. Check below to enable additional security lists:</p>
+          <div class="space-y-3">
+            <!-- Checkbox 1: Malware Blocklist -->
+            <label class="flex items-start gap-3 cursor-pointer p-3 bg-neutral-950 border border-neutral-800 rounded-xl hover:border-lime-500/30 transition">
+              <input type="checkbox" x-model="setupMalwareList" class="mt-1 accent-lime-500">
+              <div>
+                <span class="text-xs font-semibold text-white block">Malware &amp; Phishing Protection</span>
+                <span class="text-neutral-500 text-2xs block mt-0.5">Blocks known malicious domains using URLhaus database.</span>
+              </div>
+            </label>
+
+            <!-- Checkbox 2: Extended Tracking Blocklist -->
+            <label class="flex items-start gap-3 cursor-pointer p-3 bg-neutral-950 border border-neutral-800 rounded-xl hover:border-lime-500/30 transition">
+              <input type="checkbox" x-model="setupTrackingList" class="mt-1 accent-lime-500">
+              <div>
+                <span class="text-xs font-semibold text-white block">Extended Telemetry &amp; Tracking</span>
+                <span class="text-neutral-500 text-2xs block mt-0.5">Blocks aggressive trackers and telemetry using Lightswitch05's list.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div x-show="setupError" class="p-3 rounded-lg bg-red-950/50 border border-red-500/30 text-red-400 text-xs font-semibold" x-text="setupError"></div>
+
+        <div class="flex gap-3 pt-2">
+          <button 
+            type="button"
+            @click="completeSetup(true)"
+            class="w-1/3 py-3 px-4 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-xl transition border border-neutral-700 active:scale-[0.98]"
+          >
+            Skip Setup
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 py-3 px-4 bg-lime-500 hover:bg-lime-600 active:scale-[0.98] text-neutral-950 font-bold rounded-xl transition shadow-lg shadow-lime-500/20"
+          >
+            Save &amp; Finish
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
+  <div 
+    x-show="token" 
+    class="flex flex-col md:flex-row min-h-screen"
+    x-cloak
+  >
+    <!-- MOBILE HEADER -->
+    <header class="flex md:hidden items-center justify-between px-6 py-4 bg-slate-50 dark:bg-darkcard border-b border-slate-200/80 dark:border-neutral-800 z-30 sticky top-0 w-full">
+      <div class="flex items-center space-x-3">
+        <!-- Hamburger Toggle -->
+        <button 
+          @click="showMobileMenu = !showMobileMenu" 
+          class="text-slate-700 dark:text-neutral-300 hover:text-lime-700 p-2 rounded-lg bg-slate-200/60 dark:bg-neutral-800 focus:outline-none transition"
+        >
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <span class="text-lime-700 dark:text-lime-500"><i class="fa-solid fa-shield-halved"></i></span>
+          <span class="text-lg font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-700 dark:text-lime-500 font-medium">Sink</span></span>
+        </div>
+      </div>
+      <!-- Theme Toggle -->
+      <button 
+        @click="toggleTheme()" 
+        class="p-2 rounded-lg bg-slate-200/60 dark:bg-neutral-800 text-slate-700 dark:text-gray-400 hover:text-lime-700 dark:hover:text-lime-400 transition"
+      >
+        <i class="fa-solid" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+      </button>
+    </header>
+
+    <!-- Sidebar Backdrop for Mobile -->
+    <div 
+      x-show="showMobileMenu" 
+      @click="showMobileMenu = false" 
+      x-cloak 
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs md:hidden z-30 transition-opacity"
+    ></div>
+
+    <!-- SIDEBAR -->
+    <aside 
+      :class="showMobileMenu ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
+      class="fixed md:sticky top-0 inset-y-0 left-0 w-64 h-full md:h-screen bg-slate-50 dark:bg-darkcard border-r border-slate-200/80 dark:border-neutral-800 flex flex-col justify-between z-40 transition-transform duration-300 ease-in-out"
+    >
+      <div>
+        <!-- Logo -->
+        <div class="p-6 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="text-lime-700 dark:text-lime-500 text-2xl"><i class="fa-solid fa-shield-halved"></i></span>
+            <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Zero<span class="text-lime-700 dark:text-lime-500 font-medium">Sink</span></span>
+          </div>
+          <!-- Sidebar Toggle / Theme (Desktop) / Close (Mobile) -->
+          <div class="flex items-center space-x-1">
+            <!-- Theme toggle (hidden on mobile sidebar) -->
+            <button 
+              @click="toggleTheme()" 
+              class="hidden md:block p-2 rounded-lg bg-slate-200/60 dark:bg-neutral-800 text-slate-700 dark:text-gray-400 hover:text-lime-700 dark:hover:text-lime-400 transition"
+            >
+              <i class="fa-solid" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+            </button>
+            <!-- Close Button for Mobile -->
+            <button 
+              @click="showMobileMenu = false" 
+              class="md:hidden p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-neutral-800 text-slate-700 dark:text-gray-400 hover:text-red-500 transition"
+            >
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="p-4 space-y-1">
+          <button 
+            @click="activeTab = 'dashboard'; loadStats(); showMobileMenu = false" 
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
+            :class="activeTab === 'dashboard' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+          >
+            <span><i class="fa-solid fa-chart-line w-5"></i></span>
+            <span>Dashboard</span>
+          </button>
+
+          <button 
+            @click="activeTab = 'logs'; loadLogs(); showMobileMenu = false" 
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
+            :class="activeTab === 'logs' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+          >
+            <span><i class="fa-solid fa-list-ul w-5"></i></span>
+            <span>Query Log</span>
+          </button>
+
+          <button 
+            @click="activeTab = 'groups'; loadGroups(); mobileShowDetails = false; showMobileMenu = false" 
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
+            :class="activeTab === 'groups' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+          >
+            <span><i class="fa-solid fa-users w-5"></i></span>
+            <span>Group Manager</span>
+          </button>
+
+          <button 
+            @click="activeTab = 'parental'; loadParentalStatus(); showMobileMenu = false" 
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
+            :class="activeTab === 'parental' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+          >
+            <span><i class="fa-solid fa-child w-5"></i></span>
+            <span>Parental Controls</span>
+          </button>
+
+          <button 
+            @click="activeTab = 'settings'; loadSettings(); showMobileMenu = false" 
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition animate-fade"
+            :class="activeTab === 'settings' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+          >
+            <div class="flex items-center space-x-3">
+              <span><i class="fa-solid fa-sliders w-5"></i></span>
+              <span>Settings & Backup</span>
+            </div>
+            <!-- Update Notification Badge -->
+            <span x-show="showUpdateBadge" x-cloak class="w-2.5 h-2.5 rounded-full bg-red-500 border border-slate-50 dark:border-darkcard animate-pulse" title="New version available!"></span>
+          </button>
+
+          <button 
+            @click="activeTab = 'guide'; showMobileMenu = false" 
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition"
+            :class="activeTab === 'guide' ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-4 border-lime-500' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+          >
+            <span><i class="fa-solid fa-book w-5"></i></span>
+            <span>How to Setup</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- User footer -->
+      <div class="p-4 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-full bg-lime-500/20 text-lime-700 dark:text-lime-400 flex items-center justify-center font-bold">
+            A
+          </div>
+          <div>
+            <div class="text-sm font-bold dark:text-white">Admin</div>
+            <div class="text-xs text-slate-700 dark:text-neutral-300">zerosink</div>
+          </div>
+        </div>
+        <button 
+          @click="logout()" 
+          class="p-2 text-slate-600 hover:text-red-500 transition" 
+          title="Logout"
+        >
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="flex-1 min-w-0 p-6 md:p-10 overflow-y-auto max-h-screen">
+      
+      <!-- ==================== TAB: DASHBOARD ==================== -->
+      <div x-show="activeTab === 'dashboard'" class="space-y-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">Dashboard</h2>
+            <p class="text-gray-500 dark:text-neutral-400 text-sm mt-1">Real-time stats and network insights</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-lime-500 animate-ping mr-1"></span>
+            <span class="text-xs font-semibold text-gray-500 dark:text-neutral-400">Live Updates Enabled</span>
+          </div>
+        </div>
+
+        <!-- Ad Blocking Status and Pause Controls -->
+        <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" 
+                 :class="pauseStatus.disabled ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-lime-500/10 text-lime-500 border border-lime-500/20'">
+              <i class="fa-solid" :class="pauseStatus.disabled ? 'fa-circle-pause' : 'fa-circle-check'"></i>
+            </div>
+            <div>
+              <div class="text-sm font-bold dark:text-white">
+                Ad Blocking: <span :class="pauseStatus.disabled ? 'text-red-500' : 'text-lime-500'" x-text="pauseStatus.disabled ? 'Paused' : 'Active'">Active</span>
+              </div>
+              <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1" x-text="pauseStatus.disabled ? ('Resuming in ' + formatUptime(pauseStatus.remaining_seconds)) : 'All configured ad lists are active.'"></div>
+            </div>
+          </div>
+          
+          <div class="flex items-center space-x-2">
+            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(300)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-700 transition">Pause 5m</button>
+            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(1800)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-700 transition">Pause 30m</button>
+            <button x-show="!pauseStatus.disabled" @click="pauseBlocking(-1)" class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl border border-red-500/20 transition">Pause Indefinitely</button>
+            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition">Resume Blocking Now</button>
+          </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-lime-500">
+            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">Total Queries</div>
+            <div class="text-3xl font-extrabold mt-2 dark:text-white" x-text="stats.summary.total_queries.toLocaleString()">0</div>
+            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Last 24 hours</div>
+          </div>
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-red-500">
+            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">Blocked Queries</div>
+            <div class="text-3xl font-extrabold mt-2 text-red-500" x-text="stats.summary.blocked_queries.toLocaleString()">0</div>
+            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Blocked domains</div>
+          </div>
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-lime-400">
+            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">Percent Blocked</div>
+            <div class="text-3xl font-extrabold mt-2 text-lime-700 dark:text-lime-400" x-text="stats.summary.block_rate_percent + '%'">0.0%</div>
+            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Block rate</div>
+          </div>
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm border-l-4 border-l-blue-400">
+            <div class="text-slate-700 dark:text-neutral-300 text-xs font-bold uppercase tracking-wider">DNS Cache Size</div>
+            <div class="text-3xl font-extrabold mt-2 text-blue-500" x-text="stats.system.dns_cache_size">0</div>
+            <div class="text-xs text-slate-500 dark:text-neutral-400 mt-1">TTL-respecting cache</div>
+          </div>
+        </div>
+
+        <!-- Queries Chart -->
+        <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm">
+          <h3 class="text-lg font-bold mb-4 dark:text-white">Queries Over Time</h3>
+          <div class="relative h-72">
+            <canvas id="queriesChart" class="block w-full h-full"></canvas>
+          </div>
+        </div>
+
+        <!-- Bottom Lists Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Top Blocked -->
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-800 p-6 rounded-2xl shadow-sm">
+            <h3 class="text-lg font-bold mb-4 text-red-500"><i class="fa-solid fa-ban mr-2"></i>Top Blocked Domains</h3>
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+              <template x-for="(d, idx) in stats.top_blocked" :key="d.domain">
+                <div class="flex items-center justify-between text-sm py-1 border-b border-slate-200 dark:border-neutral-800 last:border-0">
+                  <span class="truncate font-semibold dark:text-neutral-200" :title="d.domain" x-text="d.domain"></span>
+                  <span class="px-2 py-0.5 rounded bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" x-text="d.count font-bold"></span>
+                </div>
+              </template>
+              <div x-show="stats.top_blocked.length === 0" class="text-center py-6 text-gray-400 text-sm">No blocks registered.</div>
+            </div>
+          </div>
+
+          <!-- Top Allowed -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm">
+            <h3 class="text-lg font-bold mb-4 text-lime-500"><i class="fa-solid fa-check-double mr-2"></i>Top Allowed Domains</h3>
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+              <template x-for="d in stats.top_allowed" :key="d.domain">
+                <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 dark:border-neutral-800 last:border-0">
+                  <span class="truncate font-semibold dark:text-neutral-200" :title="d.domain" x-text="d.domain"></span>
+                  <span class="px-2 py-0.5 rounded bg-lime-100 dark:bg-lime-950/40 text-lime-600 dark:text-lime-400 font-bold" x-text="d.count font-bold"></span>
+                </div>
+              </template>
+              <div x-show="stats.top_allowed.length === 0" class="text-center py-6 text-gray-600 dark:text-neutral-400 text-sm">No domains allowed.</div>
+            </div>
+          </div>
+
+          <!-- Top Clients -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm">
+            <h3 class="text-lg font-bold mb-4 dark:text-white"><i class="fa-solid fa-laptop mr-2"></i>Top Active Clients</h3>
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+              <template x-for="c in stats.top_clients" :key="c.client_ip">
+                <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 dark:border-neutral-800 last:border-0">
+                  <div>
+                    <span class="font-semibold block dark:text-neutral-200" x-text="c.client_name || c.client_ip"></span>
+                    <span class="text-xs text-gray-600 dark:text-neutral-400" x-text="c.client_ip"></span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 font-bold" x-text="c.count"></span>
+                </div>
+              </template>
+              <div x-show="stats.top_clients.length === 0" class="text-center py-6 text-gray-600 dark:text-neutral-400 text-sm">No client traffic.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB: QUERY LOG ==================== -->
+      <div x-show="activeTab === 'logs'" class="space-y-6">
+        <div>
+          <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">Query Log</h2>
+          <p class="text-gray-700 dark:text-neutral-300 text-sm mt-1">Audit trail of DNS transactions</p>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-darkcard p-4 rounded-2xl border border-gray-100 dark:border-neutral-800">
+          <div class="flex flex-wrap items-center gap-3">
+            <input 
+              type="text" 
+              x-model="logSearch" 
+              @input.debounce.300ms="loadLogs()"
+              class="px-4 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl w-64 focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" 
+              placeholder="Search domain or client..."
+            >
+            <select 
+              x-model="logStatusFilter" 
+              @change="loadLogs()"
+              class="px-4 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-slate-900 dark:text-white"
+            >
+              <option value="">All Statuses</option>
+              <option value="Blocked">Blocked Only</option>
+              <option value="Allowed">Allowed Only</option>
+            </select>
+          </div>
+          
+          <div class="flex items-center space-x-4 text-sm font-semibold">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" x-model="logAutoPoll" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500">
+              <span class="text-gray-700 dark:text-neutral-300">Live Polling</span>
+            </label>
+            <button 
+              @click="loadLogs()" 
+              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-xl text-xs flex items-center gap-1 transition text-gray-700 dark:text-white"
+            >
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Query Log Table -->
+        <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 rounded-2xl shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-neutral-300">
+                  <th class="py-4 px-6">Timestamp</th>
+                  <th class="py-4 px-6">Client</th>
+                  <th class="py-4 px-6">Domain</th>
+                  <th class="py-4 px-6 w-20">Type</th>
+                  <th class="py-4 px-6">Group</th>
+                  <th class="py-4 px-6 w-44">Status</th>
+                  <th class="py-4 px-6 w-24">Latency</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-neutral-800 text-sm">
+                <template x-for="log in logs" :key="log.id">
+                  <tr class="hover:bg-gray-50/50 dark:hover:bg-neutral-800/50 transition">
+                    <td class="py-3.5 px-6 whitespace-nowrap text-gray-600 dark:text-neutral-400" x-text="formatDate(log.timestamp)"></td>
+                    <td class="py-3.5 px-6 whitespace-nowrap">
+                      <div class="font-semibold dark:text-neutral-200" x-text="log.client_name || log.client_ip"></div>
+                      <div class="text-xs text-gray-600 dark:text-neutral-400" x-text="log.client_ip"></div>
+                    </td>
+                    <td class="py-3.5 px-6 break-all max-w-xs font-semibold dark:text-neutral-200" x-text="log.domain"></td>
+                    <td class="py-3.5 px-6 whitespace-nowrap"><span class="text-xs font-bold text-gray-600 dark:text-neutral-400" x-text="log.query_type"></span></td>
+                    <td class="py-3.5 px-6 whitespace-nowrap"><span class="px-2 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 text-xs text-gray-700 dark:text-neutral-300 font-semibold" x-text="log.group_name"></span></td>
+                    <td class="py-3.5 px-6 whitespace-nowrap">
+                      <span 
+                        class="px-2.5 py-1 rounded-full text-xs font-bold border"
+                        :class="log.status.startsWith('Blocked') 
+                          ? 'bg-red-500/10 text-red-500 border-red-500/20' 
+                          : log.status.includes('Whitelist')
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            : 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-500/20'"
+                        x-text="log.status"
+                      ></span>
+                    </td>
+                    <td class="py-3.5 px-6 whitespace-nowrap text-right font-mono text-xs" :class="log.reply_time_ms < 5 ? 'text-lime-700 dark:text-lime-400' : 'text-gray-500 dark:text-neutral-400'" x-text="log.reply_time_ms.toFixed(1) + ' ms'"></td>
+                  </tr>
+                </template>
+                <tr x-show="logs.length === 0">
+                  <td colspan="7" class="py-8 text-center text-gray-600 dark:text-neutral-400">No logs found matching criteria.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB: GROUP MANAGER ==================== -->
+      <div x-show="activeTab === 'groups'" class="space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">Group Manager</h2>
+            <p class="text-gray-700 dark:text-neutral-300 text-sm mt-1">Configure client groupings and device assignments</p>
+          </div>
+          <!-- Create Group Button trigger -->
+          <button 
+            @click="openCreateGroup()" 
+            class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center gap-2 transition"
+          >
+            <i class="fa-solid fa-plus"></i> Create Group
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+          
+          <!-- Groups Sidebar list -->
+          <div 
+            class="space-y-3 lg:col-span-1"
+            :class="mobileShowDetails ? 'hidden lg:block' : 'block'"
+          >
+            <template x-for="g in groups" :key="g.id">
+              <div 
+                @click="selectedGroupId = g.id; loadGroupDetails(g.id); mobileShowDetails = true"
+                class="p-4 rounded-xl border cursor-pointer transition relative"
+                :class="selectedGroupId === g.id 
+                  ? 'bg-lime-500/10 border-lime-500 text-lime-700 dark:text-lime-400' 
+                  : 'bg-white dark:bg-darkcard border-gray-100 dark:border-neutral-800 hover:border-lime-500/40 text-gray-700 dark:text-neutral-300'"
+              >
+                <div class="font-bold text-sm tracking-tight pr-6" x-text="g.name"></div>
+                <div class="text-xs text-gray-600 dark:text-neutral-400 truncate mt-1" x-text="g.description || 'No description'"></div>
+                <div class="flex items-center gap-2 mt-3 text-2xs uppercase tracking-wider text-gray-500 dark:text-neutral-400">
+                  <span><i class="fa-solid fa-laptop"></i> <span x-text="g.client_count"></span></span>
+                  <span>&bull;</span>
+                  <span><i class="fa-solid fa-list-ul"></i> <span x-text="g.adlist_count"></span></span>
+                  <span>&bull;</span>
+                  <span><i class="fa-solid fa-shield-halved"></i> <span x-text="g.rule_count"></span></span>
+                </div>
+                
+                <!-- Delete Group Button (Except Default id=1) -->
+                <button 
+                  x-show="g.id !== 1" 
+                  @click.stop="deleteGroup(g.id)" 
+                  class="absolute top-4 right-4 text-gray-600 hover:text-red-500 transition"
+                  title="Delete Group"
+                >
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <!-- Group Details Configuration -->
+          <div 
+            class="lg:col-span-3 space-y-6" 
+            x-show="selectedGroupDetails" 
+            :class="mobileShowDetails ? 'block' : 'hidden lg:block'"
+            x-cloak
+          >
+            
+            <!-- Mobile Back Button -->
+            <button 
+              @click="mobileShowDetails = false" 
+              class="lg:hidden px-4 py-2 bg-slate-200/80 dark:bg-neutral-800 text-slate-700 dark:text-white text-xs font-bold rounded-xl flex items-center gap-2 transition mb-4"
+            >
+              <i class="fa-solid fa-arrow-left"></i> Back to Groups
+            </button>
+
+            <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-100 dark:border-neutral-800">
+              <h3 class="text-xl font-bold dark:text-white" x-text="selectedGroupDetails.group.name"></h3>
+              <p class="text-gray-500 dark:text-neutral-300 text-xs mt-1" x-text="selectedGroupDetails.group.description || 'No description provided.'"></p>
+            </div>
+
+            <!-- Group Subtabs navigation -->
+            <div class="flex items-center space-x-2 border-b border-slate-200 dark:border-neutral-800 pb-2">
+              <button 
+                @click="activeGroupSubTab = 'clients'" 
+                class="px-4 py-2 rounded-xl text-xs font-bold transition focus:outline-none"
+                :class="activeGroupSubTab === 'clients' ? 'bg-lime-500 text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+              >
+                <i class="fa-solid fa-laptop mr-1.5"></i>Clients
+              </button>
+              <button 
+                @click="activeGroupSubTab = 'adlists'" 
+                class="px-4 py-2 rounded-xl text-xs font-bold transition focus:outline-none"
+                :class="activeGroupSubTab === 'adlists' ? 'bg-lime-500 text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+              >
+                <i class="fa-solid fa-globe mr-1.5"></i>Blocklists
+              </button>
+              <button 
+                @click="activeGroupSubTab = 'rules'" 
+                class="px-4 py-2 rounded-xl text-xs font-bold transition focus:outline-none"
+                :class="activeGroupSubTab === 'rules' ? 'bg-lime-500 text-neutral-950 shadow-sm' : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-200/60 dark:hover:bg-neutral-800'"
+              >
+                <i class="fa-solid fa-shield-halved mr-1.5"></i>Custom Domains
+              </button>
+            </div>
+
+            <!-- SUBTAB: Associated Clients -->
+            <div x-show="activeGroupSubTab === 'clients'" class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-100 dark:border-neutral-800 space-y-4 max-w-3xl animate-fade">
+              <h4 class="font-bold text-sm border-b border-gray-100 dark:border-neutral-800 pb-2 dark:text-white">
+                <i class="fa-solid fa-laptop mr-2 text-lime-700 dark:text-lime-400"></i>Associated Clients & Devices
+              </h4>
+              
+              <!-- Client Form -->
+              <form @submit.prevent="addClient()" class="flex flex-col sm:flex-row gap-3">
+                <input type="text" x-model="newClientIp" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 dark:text-white" placeholder="IP or CIDR (e.g. 192.168.1.5)" required>
+                <input type="text" x-model="newClientName" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 dark:text-white" placeholder="Client Name (e.g. iPad)">
+                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-sm font-bold rounded-xl transition">Add Client</button>
+              </form>
+
+              <!-- Clients list -->
+              <div class="space-y-2 max-h-96 overflow-y-auto pt-2">
+                <template x-for="c in selectedGroupDetails.clients" :key="c.id">
+                  <div class="flex items-center justify-between text-sm p-3 bg-gray-50 dark:bg-darkinput rounded-xl border border-gray-100 dark:border-neutral-800">
+                    <div>
+                      <div class="font-semibold dark:text-neutral-200" x-text="c.name || 'Unnamed Client'"></div>
+                      <div class="text-xs text-gray-600 dark:text-neutral-400 font-mono" x-text="c.ip_or_cidr"></div>
+                    </div>
+                    <button @click="deleteClient(c.id)" class="p-2 text-gray-600 hover:text-red-500 transition"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </template>
+                <div x-show="selectedGroupDetails.clients.length === 0" class="text-center py-8 text-gray-600 dark:text-neutral-400 text-xs">No devices explicitly mapped to this group. All other devices will fallback to the Default group.</div>
+              </div>
+            </div>
+
+            <!-- SUBTAB: Public Blocklists (Adlists) -->
+            <div x-show="activeGroupSubTab === 'adlists'" class="space-y-6 animate-fade">
+              <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-100 dark:border-neutral-800 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 dark:border-neutral-800 pb-2 gap-3">
+                <h4 class="font-bold text-sm dark:text-white flex items-center">
+                  <i class="fa-solid fa-globe mr-2 text-lime-700 dark:text-lime-400"></i>Public Blocklists (Adlists)
+                </h4>
+                <!-- Search filter for adlists -->
+                <div class="flex items-center space-x-2">
+                  <input 
+                    type="text" 
+                    x-model="adlistSearch" 
+                    class="px-3 py-1.5 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white w-48"
+                    placeholder="Search blocklists..."
+                  >
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-neutral-400">Add URLs of hostfiles or AdGuard filters to block ads/trackers/malware on this group.</p>
+
+              <!-- Add Blocklist Form -->
+              <form @submit.prevent="addAdlist()" class="flex flex-col sm:flex-row gap-3">
+                <input type="text" x-model="newAdlistName" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Blocklist Name (e.g. EasyList)" required>
+                <input type="url" x-model="newAdlistUrl" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="https://domain.com/hosts.txt" required>
+                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-sm font-bold rounded-xl transition">Add List</button>
+              </form>
+
+              <!-- Adlists list -->
+              <div class="space-y-2 max-h-[30rem] overflow-y-auto pt-2">
+                <template x-for="a in selectedGroupDetails.adlists.filter(x => !adlistSearch || x.name.toLowerCase().includes(adlistSearch.toLowerCase()) || x.url.toLowerCase().includes(adlistSearch.toLowerCase()))" :key="a.id">
+                  <div class="flex items-center justify-between text-sm p-3 bg-gray-50 dark:bg-darkinput rounded-xl border border-gray-100 dark:border-neutral-800">
+                    <div class="truncate max-w-[70%]">
+                      <div class="font-semibold dark:text-neutral-200 truncate" x-text="a.name"></div>
+                      <div class="text-2xs text-gray-650 dark:text-neutral-455 truncate" :title="a.url" x-text="a.url"></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <!-- Toggle Switch -->
+                      <button 
+                        @click="toggleAdlist(a.id)" 
+                        class="w-8 h-4 rounded-full relative transition-colors duration-200 focus:outline-none"
+                        :class="a.enabled ? 'bg-lime-500' : 'bg-gray-300 dark:bg-neutral-700'"
+                      >
+                        <span 
+                          class="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform duration-200"
+                          :class="a.enabled ? 'translate-x-4' : ''"
+                        ></span>
+                      </button>
+                      <button @click="deleteAdlist(a.id)" class="p-2 text-gray-600 hover:text-red-500 transition" title="Delete blocklist"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                  </div>
+                </template>
+                <div x-show="selectedGroupDetails.adlists.length === 0" class="text-center py-8 text-gray-650 dark:text-neutral-400 text-xs">No public lists added to this group.</div>
+                <div x-show="selectedGroupDetails.adlists.length > 0 && selectedGroupDetails.adlists.filter(x => !adlistSearch || x.name.toLowerCase().includes(adlistSearch.toLowerCase()) || x.url.toLowerCase().includes(adlistSearch.toLowerCase())).length === 0" class="text-center py-8 text-gray-650 dark:text-neutral-450 text-xs">No lists match your search.</div>
+              </div>
+
+              <!-- Compile Lists Button -->
+              <button 
+                @click="compileLists()" 
+                class="w-full py-2.5 bg-neutral-900 hover:bg-neutral-850 dark:bg-neutral-850 dark:hover:bg-neutral-750 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 border border-neutral-700 transition"
+                :disabled="compiling"
+              >
+                <span x-show="compiling" class="animate-spin"><i class="fa-solid fa-spinner"></i></span>
+                <i x-show="!compiling" class="fa-solid fa-gears"></i>
+                <span x-text="compiling ? 'Compiling blocklists...' : 'Compile &amp; Update Lists'"></span>
+              </button>
+            </div>
+
+            <!-- Card 2: Discover & Add Available Blocklists -->
+            <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-100 dark:border-neutral-800 space-y-6">
+              <div class="border-b border-gray-100 dark:border-neutral-800 pb-2">
+                <h4 class="font-bold text-sm dark:text-white flex items-center">
+                  <i class="fa-solid fa-compass mr-2 text-lime-700 dark:text-lime-400"></i>Discover &amp; Import Blocklists
+                </h4>
+                <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">Quickly add curated lists from the internet or copy blocklists used in your other groups.</p>
+              </div>
+
+              <!-- Curated Internet Lists Section -->
+              <div class="space-y-3">
+                <div class="text-2xs font-semibold text-lime-700 dark:text-lime-400 uppercase tracking-wider">Curated Lists from the Internet</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <template x-for="item in discoverCuratedLists" :key="item.url">
+                    <div class="flex flex-col justify-between p-3.5 bg-gray-50 dark:bg-darkinput rounded-xl border border-gray-100 dark:border-neutral-800 hover:border-lime-500 dark:hover:border-lime-500 transition duration-150">
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-semibold text-xs dark:text-neutral-200" x-text="item.name"></span>
+                          <span class="text-4xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" 
+                                :class="{
+                                  'bg-red-500/10 text-red-600 dark:text-red-400': item.category === 'Security',
+                                  'bg-blue-500/10 text-blue-600 dark:text-blue-400': item.category === 'Privacy',
+                                  'bg-lime-500/10 text-lime-600 dark:text-lime-400': item.category === 'Ads',
+                                  'bg-purple-500/10 text-purple-650 dark:text-purple-400': item.category === 'Telemetry'
+                                }"
+                                x-text="item.category">
+                          </span>
+                        </div>
+                        <p class="text-2xs text-gray-500 dark:text-neutral-400" x-text="item.desc"></p>
+                        <div class="text-3xs text-gray-400 dark:text-neutral-500 truncate animate-fade" x-text="item.url"></div>
+                      </div>
+                      <div class="mt-3 pt-2 border-t border-gray-100 dark:border-neutral-800/50 flex justify-end">
+                        <!-- Add / Added Button -->
+                        <button 
+                          x-show="!isAdlistAdded(item.url)"
+                          @click="addAdlistFromDiscover(item.name, item.url)" 
+                          class="px-2.5 py-1 text-3xs font-bold text-neutral-955 bg-lime-500 hover:bg-lime-600 rounded-lg transition flex items-center gap-1"
+                        >
+                          <i class="fa-solid fa-plus text-4xs"></i> Add to Group
+                        </button>
+                        <span 
+                          x-show="isAdlistAdded(item.url)"
+                          class="text-3xs font-semibold text-lime-600 dark:text-lime-400 flex items-center"
+                        >
+                          <i class="fa-solid fa-circle-check mr-1"></i> Added
+                        </span>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Lists from Other Groups Section -->
+              <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-neutral-800/50">
+                <div class="text-2xs font-semibold text-lime-700 dark:text-lime-400 uppercase tracking-wider">Used in Your Other Groups</div>
+                
+                <!-- List container -->
+                <div class="space-y-2 max-h-[15rem] overflow-y-auto pr-1">
+                  <template x-for="item in getOtherGroupLists()" :key="item.url">
+                    <div class="flex items-center justify-between text-xs p-3 bg-gray-50 dark:bg-darkinput rounded-xl border border-gray-100 dark:border-neutral-800 animate-fade">
+                      <div class="truncate max-w-[70%]">
+                        <div class="font-semibold dark:text-neutral-200 truncate" x-text="item.name"></div>
+                        <div class="text-2xs text-gray-400 dark:text-neutral-500 truncate" x-text="item.url"></div>
+                      </div>
+                      <div>
+                        <button 
+                          x-show="!isAdlistAdded(item.url)"
+                          @click="addAdlistFromDiscover(item.name, item.url)" 
+                          class="px-2.5 py-1 text-3xs font-bold text-neutral-955 bg-lime-500 hover:bg-lime-600 rounded-lg transition flex items-center gap-1"
+                        >
+                          <i class="fa-solid fa-plus text-4xs"></i> Import
+                        </button>
+                        <span 
+                          x-show="isAdlistAdded(item.url)"
+                          class="text-3xs font-semibold text-lime-600 dark:text-lime-400 flex items-center"
+                        >
+                          <i class="fa-solid fa-circle-check mr-1"></i> Added
+                        </span>
+                      </div>
+                    </div>
+                  </template>
+                  <div x-show="getOtherGroupLists().length === 0" class="text-center py-4 text-gray-400 dark:text-neutral-500 text-xs">
+                    No other custom blocklists found in other groups.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+            <!-- SUBTAB: Allowed / Denied Domain Rules -->
+            <div x-show="activeGroupSubTab === 'rules'" class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-100 dark:border-neutral-800 space-y-4 animate-fade">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 dark:border-neutral-800 pb-2 gap-3">
+                <h4 class="font-bold text-sm dark:text-white flex items-center">
+                  <i class="fa-solid fa-shield-halved mr-2 text-lime-700 dark:text-lime-400"></i>Custom Domain Rules
+                </h4>
+                <!-- Search filter for rules -->
+                <div class="flex items-center space-x-2">
+                  <input 
+                    type="text" 
+                    x-model="ruleSearch" 
+                    class="px-3 py-1.5 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white w-48"
+                    placeholder="Search custom rules..."
+                  >
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-neutral-400">Explicitly whitelist or blacklist domains. Supporting wildcards/regex patterns.</p>
+
+              <!-- Add Custom Rule Form -->
+              <form @submit.prevent="addRule()" class="flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <input type="text" x-model="newRuleDomain" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Domain or RegEx (e.g. *.ad.com or ^ad\.)" required>
+                  <select x-model="newRuleType" class="px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-slate-900 dark:text-white">
+                    <option value="deny">Blacklist (Block)</option>
+                    <option value="allow">Whitelist (Allow)</option>
+                  </select>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <label class="flex items-center space-x-2 text-xs text-gray-655 dark:text-neutral-400 cursor-pointer">
+                    <input type="checkbox" x-model="newRuleIsRegex" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500">
+                    <span>RegEx / Wildcard Rule</span>
+                  </label>
+                  <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-sm font-bold rounded-xl transition">Add Rule</button>
+                </div>
+              </form>
+
+              <!-- Rules list -->
+              <div class="space-y-2 max-h-[30rem] overflow-y-auto pt-2">
+                <template x-for="r in selectedGroupDetails.rules.filter(x => !ruleSearch || x.domain.toLowerCase().includes(ruleSearch.toLowerCase()))" :key="r.id">
+                  <div class="flex items-center justify-between text-sm p-3 bg-gray-50 dark:bg-darkinput rounded-xl border border-gray-100 dark:border-neutral-800">
+                    <span class="font-semibold dark:text-neutral-200 truncate max-w-[50%] animate-fade" x-text="r.domain" :title="r.domain"></span>
+                    <div class="flex items-center gap-2">
+                      <span x-show="r.is_regex" class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-450 text-3xs font-bold uppercase">REGEX</span>
+                      <span 
+                        class="px-1.5 py-0.5 rounded text-3xs font-bold uppercase"
+                        :class="r.type === 'allow' ? 'bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400' : 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400'"
+                        x-text="r.type === 'allow' ? 'ALLOW' : 'BLOCK'"
+                      ></span>
+                      <button @click="deleteRule(r.id)" class="p-2 text-gray-655 hover:text-red-500 transition" title="Delete custom rule"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                  </div>
+                </template>
+                <div x-show="selectedGroupDetails.rules.length === 0" class="text-center py-8 text-gray-655 dark:text-neutral-400 text-xs">No custom domains configured for this group.</div>
+                <div x-show="selectedGroupDetails.rules.length > 0 && selectedGroupDetails.rules.filter(x => !ruleSearch || x.domain.toLowerCase().includes(ruleSearch.toLowerCase())).length === 0" class="text-center py-8 text-gray-655 dark:text-neutral-450 text-xs">No custom rules match your search.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+        <!-- CREATE GROUP MODAL -->
+        <div 
+          x-show="showCreateGroupModal" 
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          x-cloak
+        >
+          <div class="w-full max-w-lg md:max-w-3xl lg:max-w-4xl p-6 bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 rounded-2xl shadow-2xl m-4 transition-all duration-300">
+            <h3 class="text-lg font-bold mb-4 dark:text-white">Create New Group</h3>
+            <form @submit.prevent="createGroup()" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Group Name</label>
+                  <input type="text" x-model="newGroupName" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white placeholder-gray-500" placeholder="Kids Devices" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Description</label>
+                  <textarea x-model="newGroupDesc" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white placeholder-gray-500" rows="1" placeholder="Strict blocklist for kids devices..."></textarea>
+                </div>
+              </div>
+
+              <!-- Blocklist Selection Checkboxes -->
+              <div class="space-y-2 border-t border-gray-100 dark:border-neutral-800 pt-3">
+                <label class="block text-xs font-bold text-gray-700 dark:text-neutral-300">Select Blocklists to add to this group:</label>
+                
+                <div class="space-y-4 max-h-60 md:max-h-[30rem] overflow-y-auto pr-1">
+                  <!-- Predefined Default Lists -->
+                  <div>
+                    <div class="text-2xs font-semibold text-lime-700 dark:text-lime-400 uppercase tracking-wider mb-1.5">Predefined Filters</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <template x-for="l in defaultListsToSelect" :key="l.url">
+                        <label class="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-neutral-300 p-2 hover:bg-slate-50 dark:hover:bg-neutral-800/40 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-100 dark:hover:border-neutral-800">
+                          <input type="checkbox" x-model="l.checked" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500 mt-0.5">
+                          <div class="min-w-0 flex-1">
+                            <div class="font-semibold truncate" x-text="l.name" :title="l.name"></div>
+                            <div class="text-3xs text-gray-500 dark:text-neutral-400 truncate" x-text="l.url" :title="l.url"></div>
+                          </div>
+                        </label>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- Custom Lists previously added -->
+                  <div x-show="customListsToSelect.length > 0" class="pt-3 border-t border-gray-100 dark:border-neutral-800/50">
+                    <div class="text-2xs font-semibold text-lime-700 dark:text-lime-400 uppercase tracking-wider mb-1.5">Previously Added Custom Lists</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <template x-for="l in customListsToSelect" :key="l.url">
+                        <label class="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-neutral-300 p-2 hover:bg-slate-50 dark:hover:bg-neutral-800/40 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-100 dark:hover:border-neutral-800">
+                          <input type="checkbox" x-model="l.checked" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500 mt-0.5">
+                          <div class="min-w-0 flex-1">
+                            <div class="font-semibold truncate" x-text="l.name" :title="l.name"></div>
+                            <div class="text-3xs text-gray-500 dark:text-neutral-400 truncate" x-text="l.url" :title="l.url"></div>
+                          </div>
+                        </label>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end space-x-2 pt-2 border-t border-gray-100 dark:border-neutral-800">
+                <button type="button" @click="showCreateGroupModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-white text-xs font-bold rounded-xl transition">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition">Create Group</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+
+
+        <!-- REBOOTING OVERLAY -->
+        <div 
+          x-show="rebooting" 
+          class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-neutral-950 text-white"
+          x-cloak
+        >
+          <div class="space-y-4 text-center max-w-xs animate-fade">
+            <i class="fa-solid fa-circle-notch fa-spin text-5xl text-lime-500"></i>
+            <h3 class="text-xl font-bold">Restarting ZeroSink</h3>
+            <p class="text-xs text-neutral-500 leading-relaxed">
+              Applying certificate configuration and restarting the web server. Reconnecting shortly...
+            </p>
+          </div>
+        </div>
+
+
+      <!-- ==================== TAB: SETTINGS & BACKUP ==================== -->
+      <div x-show="activeTab === 'settings'" class="space-y-8">
+        <div>
+          <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">Settings &amp; Backup</h2>
+          <p class="text-gray-700 dark:text-neutral-300 text-sm mt-1">Manage system configurations and administration</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- System Information -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-6">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-server mr-2 text-lime-700 dark:text-lime-400"></i>System Statistics
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-6 text-sm">
+              <div>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">ZeroSink Uptime</span>
+                <span class="font-bold dark:text-white" x-text="formatUptime(stats.system.uptime_seconds)">0s</span>
+              </div>
+              <div>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">Database File Size</span>
+                <span class="font-bold dark:text-white" x-text="formatBytes(stats.system.db_size_bytes)">0 B</span>
+              </div>
+              <div>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">Process RAM Usage</span>
+                <span class="font-bold dark:text-white" x-text="stats.system.process_ram_mb > 0 ? stats.system.process_ram_mb + ' MB' : 'N/A (Windows Dev)'">0 MB</span>
+              </div>
+              <div>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">System RAM Load</span>
+                <span class="font-bold dark:text-white" x-text="stats.system.system_ram_pct > 0 ? stats.system.system_ram_pct + '%' : 'N/A (Windows Dev)'">0%</span>
+              </div>
+              <div>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">CPU Average Load</span>
+                <span class="font-bold dark:text-white" x-text="stats.system.cpu_pct > 0 ? stats.system.cpu_pct + '%' : 'N/A (Windows Dev)'">0%</span>
+              </div>
+              <div>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">Cached DNS Records</span>
+                <span class="font-bold dark:text-white" x-text="stats.system.dns_cache_size">0</span>
+              </div>
+            </div>
+            
+            <div class="p-3 bg-lime-500/10 border border-lime-500/20 text-lime-500 rounded-xl text-xs">
+              <i class="fa-solid fa-microchip mr-1.5"></i>Optimized for single-core Raspberry Pi Zero 2 W with 512MB RAM.
+            </div>
+          </div>
+
+          <!-- System Update Card -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-6 animate-fade">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-cloud-arrow-down mr-2 text-lime-700 dark:text-lime-400"></i>Software Update
+            </h3>
+            
+            <div class="space-y-4 text-sm text-gray-700 dark:text-neutral-300">
+              <div class="flex justify-between items-center text-sm">
+                <div>
+                  <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">Installed Version</span>
+                  <span class="font-bold dark:text-white font-mono" x-text="stats.system ? 'v' + stats.system.version : 'Checking...'">Checking...</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider">Latest Version</span>
+                  <span class="font-bold font-mono" :class="updateAvailable ? 'text-amber-500 font-bold' : 'text-lime-600 font-bold'" x-text="latestVersion ? 'v' + latestVersion : 'Checking...'">Checking...</span>
+                </div>
+              </div>
+
+              <!-- Update Status Alert -->
+              <div x-show="updateAvailable && !updating && !updateError" class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs flex items-center gap-2" x-cloak>
+                <i class="fa-solid fa-circle-exclamation text-base"></i>
+                <span>A new version of ZeroSink is available!</span>
+              </div>
+
+              <div x-show="!updateAvailable && latestVersion" class="p-3 bg-lime-500/10 border border-lime-500/20 text-lime-600 dark:text-lime-400 rounded-xl text-xs flex items-center gap-2" x-cloak>
+                <i class="fa-solid fa-circle-check text-base"></i>
+                <span>ZeroSink is up to date.</span>
+              </div>
+
+              <!-- Updating State -->
+              <div x-show="updating" class="p-4 bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 rounded-xl space-y-2" x-cloak>
+                <div class="flex items-center gap-2 font-bold text-xs">
+                  <span class="animate-spin"><i class="fa-solid fa-spinner"></i></span>
+                  <span x-text="updateMessage">Updating system...</span>
+                </div>
+              </div>
+
+              <!-- Update Error -->
+              <div x-show="updateError" class="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs flex items-center gap-2" x-cloak>
+                <i class="fa-solid fa-circle-xmark text-base"></i>
+                <span x-text="updateError"></span>
+              </div>
+
+              <!-- Release Notes (Changelog) -->
+              <div x-show="updateAvailable && latestChangelog" class="mt-4 border-t border-slate-100 dark:border-neutral-800 pt-3" x-cloak>
+                <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider mb-2">Release Notes (v<span x-text="latestVersion"></span>)</span>
+                <div class="bg-gray-50 dark:bg-neutral-950 p-3 rounded-xl border border-gray-200 dark:border-neutral-800 max-h-48 overflow-y-auto text-2xs text-gray-700 dark:text-neutral-300 font-mono whitespace-pre-wrap leading-relaxed select-text" x-text="latestChangelog"></div>
+              </div>
+
+              <!-- Action Controls -->
+              <div x-show="updateAvailable && !updating" class="pt-2" x-cloak>
+                <!-- Docker Deployment: Manual instructions -->
+                <template x-if="stats.system && stats.system.is_docker">
+                  <div class="space-y-3">
+                    <p class="text-xs text-amber-500 font-semibold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Running inside Docker container</p>
+                    <p class="text-2xs text-gray-600 dark:text-neutral-400 leading-normal">Updates inside container environments are ephemeral. Please pull the latest image and restart your stack from the host terminal:</p>
+                    <pre class="bg-gray-100 dark:bg-neutral-950 p-2.5 rounded-lg text-2xs font-mono dark:text-white select-all border border-gray-200 dark:border-neutral-800">docker compose pull && docker compose up -d</pre>
+                  </div>
+                </template>
+
+                <!-- Systemd Installer: One-click update -->
+                <template x-if="stats.system && !stats.system.is_docker">
+                  <button 
+                    @click="installUpdate()" 
+                    class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+                  >
+                    <i class="fa-solid fa-circle-arrow-up"></i> Install Update Automatically
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuration Backup & Import -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-6">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-floppy-disk mr-2 text-lime-700 dark:text-lime-400"></i>Backup &amp; Restore
+            </h3>
+            
+            <div class="space-y-4 text-sm text-gray-700 dark:text-neutral-300">
+              <p>Export your full configuration (groups, clients, adlists, whitelists, and blacklists) to a streamable JSON backup. Import replaces all configurations atomically.</p>
+              
+              <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                <!-- Backup Download Button -->
+                <button 
+                  @click="backupConfig()" 
+                  class="flex-1 py-3 px-4 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 border border-neutral-700 transition"
+                >
+                  <i class="fa-solid fa-download"></i> Download Backup
+                </button>
+                
+                <!-- Restore Import Button -->
+                <div class="flex-1 relative">
+                  <input 
+                    type="file" 
+                    id="importFileInput" 
+                    @change="importConfig($event)"
+                    class="hidden" 
+                    accept=".json"
+                  >
+                  <button 
+                    @click="document.getElementById('importFileInput').click()" 
+                    class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 transition"
+                    :disabled="importing"
+                  >
+                    <span x-show="importing" class="animate-spin"><i class="fa-solid fa-spinner"></i></span>
+                    <i x-show="!importing" class="fa-solid fa-upload"></i> 
+                    <span x-text="importing ? 'Importing...' : 'Restore Backup'"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upstream DNS Servers -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-globe mr-2 text-lime-700 dark:text-lime-400"></i>Upstream DNS Servers
+            </h3>
+            
+            <form @submit.prevent="updateSettings()" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Upstream DNS Servers (Space or comma separated)</label>
+                <textarea 
+                  x-model="upstreamDns" 
+                  rows="3" 
+                  class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono"
+                  placeholder="e.g. 1.1.1.1, 8.8.8.8"
+                  required
+                ></textarea>
+                <p class="text-2xs text-gray-600 dark:text-neutral-400 mt-1">Queries are sent to all configured servers in parallel for maximum speed and redundancy. Supports IPv4 and IPv6 addresses.</p>
+              </div>
+              
+              <div x-show="upstreamDnsMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="upstreamDnsMessage"></div>
+              <div x-show="upstreamDnsError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="upstreamDnsError"></div>
+              
+              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition">Save Upstream DNS</button>
+            </form>
+          </div>
+
+          <!-- Change Password -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-key mr-2 text-lime-700 dark:text-lime-400"></i>Change Password
+            </h3>
+            
+            <form @submit.prevent="changePassword()" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Current Password</label>
+                <div class="relative">
+                  <input :type="showOldPassword ? 'text' : 'password'" x-model="passwordOld" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                  <button type="button" @click="showOldPassword = !showOldPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+                    <i class="fa-solid" :class="showOldPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">New Password</label>
+                <div class="relative">
+                  <input :type="showNewPassword ? 'text' : 'password'" x-model="passwordNew" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                  <button type="button" @click="showNewPassword = !showNewPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+                    <i class="fa-solid" :class="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Confirm New Password</label>
+                <div class="relative">
+                  <input :type="showConfirmPassword ? 'text' : 'password'" x-model="passwordConfirm" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                  <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+                    <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div x-show="passwordMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="passwordMessage"></div>
+              <div x-show="passwordError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="passwordError"></div>
+              
+              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition">Update Password</button>
+            </form>
+          </div>
+
+          <!-- Two-Factor Authentication (2FA) -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-shield-halved mr-2 text-lime-700 dark:text-lime-400"></i>Two-Factor Authentication (2FA)
+            </h3>
+            
+            <!-- State 1: 2FA is Enabled -->
+            <div x-show="totpEnabled" class="space-y-4" x-cloak>
+              <div class="p-3 bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-base"></i>
+                <span>Two-factor authentication is currently ACTIVE.</span>
+              </div>
+              <p class="text-xs text-gray-600 dark:text-neutral-400">To disable 2FA, please enter your password below to verify your identity.</p>
+              
+              <form @submit.prevent="disable2fa()" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Confirm Password</label>
+                  <div class="relative">
+                    <input :type="showDisable2faPassword ? 'text' : 'password'" x-model="disable2faPassword" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                    <button type="button" @click="showDisable2faPassword = !showDisable2faPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
+                      <i class="fa-solid" :class="showDisable2faPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                  </div>
+                </div>
+                <div x-show="totpError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="totpError"></div>
+                <button type="submit" class="py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition">Disable 2FA</button>
+              </form>
+            </div>
+
+            <!-- State 2: 2FA is Disabled -->
+            <div x-show="!totpEnabled" class="space-y-4">
+              <div x-show="!showTotpSetup" class="space-y-4">
+                <p class="text-xs text-gray-600 dark:text-neutral-400">Add an extra layer of security to your admin account by requiring a 6-digit verification code from your mobile authenticator app (e.g. Google Authenticator, Microsoft Authenticator, Authy) at login.</p>
+                <button @click="start2faSetup()" class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 transition">
+                  <i class="fa-solid fa-qrcode"></i> Setup 2FA
+                </button>
+              </div>
+
+              <!-- State 2b: Setup in progress -->
+              <div x-show="showTotpSetup" class="space-y-4" x-cloak>
+                <p class="text-xs text-gray-600 dark:text-neutral-400">Scan the QR code below using your authenticator app, or manually enter the secret key.</p>
+                
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-200 dark:border-neutral-800">
+                  <canvas id="totpQrCanvas" class="w-44 h-44"></canvas>
+                </div>
+                
+                <div class="text-center">
+                  <span class="text-neutral-400 text-2xs block uppercase font-semibold">Secret Key</span>
+                  <code class="text-xs font-mono dark:text-lime-400 font-bold select-all tracking-wider" x-text="totpSecret"></code>
+                </div>
+
+                <form @submit.prevent="confirm2faEnable()" class="space-y-3 pt-2">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Confirm 6-Digit Code</label>
+                    <input type="text" x-model="totpConfirmCode" placeholder="000000" maxlength="6" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white text-center tracking-widest font-bold" required>
+                  </div>
+                  <div x-show="totpError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="totpError"></div>
+                  <div class="flex gap-2">
+                    <button type="button" @click="showTotpSetup = false; totpError = '';" class="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-white text-xs font-bold rounded-xl transition">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition">Verify & Enable</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy & Log Settings -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4 animate-fade">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-user-shield mr-2 text-lime-700 dark:text-lime-400"></i>Privacy &amp; Logs
+            </h3>
+            
+            <form @submit.prevent="updatePrivacySettings()" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Logging Privacy Level</label>
+                <select x-model="privacyMode" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white">
+                  <option value="0">Full Logging (Logs client IP, name, and domain)</option>
+                  <option value="1">Stealth Logging (Masks query domain names in database)</option>
+                  <option value="2">Anonymized Logging (Masks client IP and client names)</option>
+                  <option value="3">No Logging (Completely disables query log inserts to save disk/RAM)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Log Retention (Days)</label>
+                <input type="number" x-model="logRetentionDays" min="1" max="365" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                <p class="text-2xs text-gray-500 dark:text-neutral-400 mt-1">Logs older than this will be automatically pruned to protect SD card storage.</p>
+              </div>
+              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition">Save Privacy Settings</button>
+            </form>
+          </div>
+
+
+
+          <!-- Local DNS Records -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4 lg:col-span-2 animate-fade">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-map-location-dot mr-2 text-lime-700 dark:text-lime-400"></i>Local DNS Records
+            </h3>
+            
+            <form @submit.prevent="addLocalDns()" class="flex flex-col sm:flex-row gap-2">
+              <input type="text" x-model="newLocalDnsDomain" class="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Domain (e.g. nas.home)" required>
+              <input type="text" x-model="newLocalDnsIp" class="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="IP Address (e.g. 192.168.1.10)" required>
+              <select x-model="newLocalDnsType" class="px-2 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none text-slate-900 dark:text-white">
+                <option value="A">A</option>
+                <option value="AAAA">AAAA</option>
+              </select>
+              <button type="submit" class="py-2 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-lg transition">Add</button>
+            </form>
+            
+            <div class="space-y-2 max-h-60 overflow-y-auto pt-2">
+              <template x-for="r in localDnsRecords" :key="r.id">
+                <div class="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-darkinput rounded-lg border border-gray-100 dark:border-neutral-800">
+                  <div>
+                    <span class="font-semibold dark:text-neutral-200 block" x-text="r.domain"></span>
+                    <span class="text-2xs text-gray-500 dark:text-neutral-400 font-mono" x-text="r.ip_address + ' (' + r.record_type + ')'"></span>
+                  </div>
+                  <button @click="deleteLocalDns(r.id)" class="text-gray-600 hover:text-red-500 transition"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              </template>
+              <div x-show="localDnsRecords.length === 0" class="text-center py-6 text-gray-600 dark:text-neutral-400 text-2xs">No local DNS mappings defined.</div>
+            </div>
+          </div>
+
+          <!-- DHCP Server Configuration -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4 lg:col-span-2 animate-fade">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <h3 class="text-lg font-bold dark:text-white">
+                <i class="fa-solid fa-network-wired mr-2 text-lime-700 dark:text-lime-400"></i>DHCP Server Configuration
+              </h3>
+              
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" x-model="dhcpEnabled" class="sr-only peer">
+                <div class="w-9 h-5 bg-neutral-200 dark:bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 peer-checked:after:bg-neutral-950"></div>
+              </label>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+              <form @submit.prevent="updateDhcpSettings()" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">IP Pool Range Start</label>
+                    <input type="text" x-model="dhcpRangeStart" placeholder="e.g. 192.168.1.150" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">IP Pool Range End</label>
+                    <input type="text" x-model="dhcpRangeEnd" placeholder="e.g. 192.168.1.200" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Gateway (Router) IP</label>
+                    <input type="text" x-model="dhcpRouter" placeholder="Leave blank for server IP" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" :disabled="!dhcpEnabled">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Subnet Mask</label>
+                    <input type="text" x-model="dhcpSubnetMask" placeholder="255.255.255.0" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Lease Time (Seconds)</label>
+                  <input type="number" x-model="dhcpLeaseTime" min="60" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                </div>
+                
+                <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition" :disabled="!dhcpEnabled">Save DHCP Configuration</button>
+              </form>
+              
+              <div class="space-y-3">
+                <h4 class="font-bold text-xs border-b border-gray-100 dark:border-neutral-800 pb-2 dark:text-white flex justify-between items-center">
+                  <span>Active DHCP Leases</span>
+                  <button type="button" @click="loadDhcpLeases()" class="text-3xs text-lime-500 hover:underline"><i class="fa-solid fa-sync"></i> Refresh Leases</button>
+                </h4>
+                
+                <div class="space-y-2 max-h-72 overflow-y-auto pt-1">
+                  <template x-for="l in dhcpLeases" :key="l.mac_address">
+                    <div class="flex items-center justify-between text-2xs p-2 bg-gray-50 dark:bg-darkinput rounded-lg border border-gray-100 dark:border-neutral-800">
+                      <div>
+                        <div class="font-bold dark:text-white" x-text="l.hostname || 'Unnamed Device'"></div>
+                        <div class="text-gray-500 dark:text-neutral-400 font-mono mt-0.5" x-text="l.ip_address + ' &bull; ' + l.mac_address"></div>
+                        <div class="text-3xs text-neutral-500 mt-0.5" x-text="'Expires ' + formatTimestamp(l.expire_time)"></div>
+                      </div>
+                      <button @click="releaseLease(l.mac_address)" class="text-red-500 hover:text-red-600 transition" title="Release Lease"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                  </template>
+                  <div x-show="dhcpLeases.length === 0" class="text-center py-8 text-gray-600 dark:text-neutral-400 text-2xs">No active DHCP leases.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ==================== TAB: PARENTAL CONTROLS ==================== -->
+      <div x-show="activeTab === 'parental'" class="space-y-8" x-cloak>
+        <div>
+          <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">Premium Parental Controls</h2>
+          <p class="text-gray-700 dark:text-neutral-300 text-sm mt-1">Keep children safe online by setting schedules and blocking app categories.</p>
+        </div>
+
+        <!-- UNLICENSED SCREEN -->
+        <div x-show="!premiumActive" class="space-y-6">
+          <div class="bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-8 rounded-3xl shadow-xl max-w-3xl flex flex-col md:flex-row gap-8 items-center">
+            <div class="space-y-4 md:w-2/3">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-lime-500/10 text-lime-700 dark:text-lime-400 border border-lime-500/20">
+                Premium Add-on
+              </span>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Protect Your Family Online</h3>
+              <p class="text-sm text-slate-700 dark:text-neutral-300 leading-relaxed">
+                Supercharge ZeroSink with advanced Parental Controls. Block popular app categories (Social Media, Gaming, Streaming, Adult Content) or set exact bedtime and homework downtime schedules per device.
+              </p>
+              <div class="flex items-center space-x-6 text-sm text-slate-600 dark:text-neutral-400">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-lime-500 dark:text-lime-400"></i> Easy setup
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-lime-500 dark:text-lime-400"></i> No device app needed
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-lime-500 dark:text-lime-400"></i> Cancel anytime
+                </div>
+              </div>
+              <div class="text-3xl font-extrabold text-lime-600 dark:text-lime-400 mt-2">
+                £1.99 <span class="text-sm font-normal text-slate-500 dark:text-neutral-400">/ month</span>
+              </div>
+            </div>
+            
+            <div class="md:w-1/3 w-full bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-2xl flex flex-col justify-center space-y-4">
+              <a href="https://zerosink.lemonsqueezy.com/checkout/buy/addon_parental" target="_blank" class="w-full text-center bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold py-3 px-4 rounded-xl transition duration-150 shadow-lg">
+                Subscribe Now
+              </a>
+              <div class="border-t border-slate-200 dark:border-neutral-800 my-2"></div>
+              <div class="space-y-2">
+                <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wider block mb-1">Have a License Key?</label>
+                <input type="text" x-model="premiumLicenseKey" placeholder="Pasted key or 'sandbox'" class="w-full bg-white dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-2 focus:ring-lime-500">
+                <button @click="activatePremium()" class="w-full bg-slate-800 dark:bg-neutral-800 border border-slate-700 dark:border-neutral-700 hover:bg-slate-700 dark:hover:bg-neutral-700 text-white font-bold py-2 rounded-xl text-2xs transition duration-150">
+                  Activate License
+                </button>
+                <div x-show="premiumActivationError" x-text="premiumActivationError" class="text-red-500 dark:text-red-400 text-3xs mt-1" x-cloak></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Port 53 Warning (Even Visible to Free Users) -->
+          <div class="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl max-w-3xl flex items-start gap-4">
+            <div class="text-amber-600 dark:text-amber-500 text-xl mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="space-y-2">
+              <h4 class="font-bold text-amber-600 dark:text-amber-500 text-sm">Outbound Port 53 Blocking Advisable</h4>
+              <p class="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
+                Even without Premium Parental Controls, children can bypass your DNS rules by manually editing the DNS configuration on their device settings. 
+                <strong>To enforce rules on the entire network, you must configure your home router's firewall to block outbound Port 53 (DNS) traffic for all devices except ZeroSink.</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LICENSED ACTIVE SCREEN -->
+        <div x-show="premiumActive" class="space-y-8" x-cloak>
+          <!-- Subscription management header -->
+          <div class="bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-lime-500/10 text-lime-600 dark:text-lime-400 rounded-2xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+              <div>
+                <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  ZeroSink Premium Parental Controls
+                  <span class="px-2 py-0.5 rounded bg-lime-500/15 text-lime-600 dark:text-lime-400 text-4xs font-bold uppercase tracking-wide">Active</span>
+                </div>
+                <div class="text-2xs text-slate-500 dark:text-neutral-400 mt-0.5" x-text="'Subscription license valid until ' + formatDate(premiumExpiresAt)"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <a :href="premiumCustomerPortal" target="_blank" class="bg-slate-950 dark:bg-neutral-900 border border-slate-800 dark:border-neutral-700 hover:bg-slate-800 dark:hover:bg-neutral-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition duration-150 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice"></i> Manage / Cancel Add-ons
+              </a>
+              <button @click="deactivatePremium()" class="text-slate-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-400 text-xs px-3 py-2 border border-transparent hover:border-red-500/20 hover:bg-red-500/5 rounded-xl transition duration-150">
+                Deactivate Key
+              </button>
+            </div>
+          </div>
+
+          <!-- Port 53 Advisory banner inside active dashboard -->
+          <div class="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl flex items-start gap-4">
+            <div class="text-amber-600 dark:text-amber-500 text-xl mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="space-y-1">
+              <h4 class="font-bold text-amber-600 dark:text-amber-500 text-sm">Important: Secure Your Network Rules</h4>
+              <p class="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
+                Ensure children cannot bypass downtime or app blocking. Configure your home router's firewall/rules to <strong>block all outbound DNS traffic (Port 53 TCP/UDP)</strong> for every device on your network, except for the local IP address of your ZeroSink server.
+              </p>
+            </div>
+          </div>
+
+          <!-- Add-on Grid: App Category Blocker & Downtime scheduler -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Side: App Category Blocker -->
+            <div class="lg:col-span-7 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-2xl space-y-6">
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-neutral-800 pb-4">
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-ban text-lime-600 dark:text-lime-400"></i> Category & App Blocker
+                  </h3>
+                  <p class="text-3xs text-slate-500 dark:text-neutral-400 mt-0.5">Select a group and choose which apps to block completely.</p>
+                </div>
+                
+                <!-- Group selector -->
+                <div class="flex items-center space-x-2">
+                  <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase">Group:</label>
+                  <select x-model="selectedParentalGroupId" @change="loadGroupAppBlocks(selectedParentalGroupId)" class="bg-slate-100 dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700 text-slate-950 dark:text-white text-2xs rounded-xl px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-lime-500">
+                    <template x-for="g in parentalGroups" :key="g.id">
+                      <option :value="g.id" x-text="g.name"></option>
+                    </template>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Categories toggles grid -->
+              <div class="space-y-6" x-show="selectedParentalGroupId">
+                
+                <!-- Social Media Category -->
+                <div class="space-y-3 bg-slate-50 dark:bg-neutral-800/40 p-4 rounded-xl border border-slate-200 dark:border-neutral-800/80">
+                  <div class="flex items-center justify-between">
+                    <span class="text-2xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 flex items-center gap-2">
+                      <i class="fa-solid fa-users text-blue-500 dark:text-blue-400"></i> Social Media
+                    </span>
+                    <!-- Master block -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" :checked="parentalAppBlocks['social'] && parentalAppBlocks['social']['all']" @change="toggleAppBlock('social', 'all', $event.target.checked)" class="sr-only peer">
+                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                      <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
+                    </label>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                    <template x-for="app in ['tiktok', 'instagram', 'snapchat', 'facebook', 'reddit', 'twitter']">
+                      <div class="flex items-center justify-between p-2.5 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-3xs font-semibold text-slate-700 dark:text-neutral-300">
+                        <span x-text="app.charAt(0).toUpperCase() + app.slice(1)"></span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" :disabled="parentalAppBlocks['social'] && parentalAppBlocks['social']['all']" :checked="parentalAppBlocks['social'] && (parentalAppBlocks['social']['all'] || parentalAppBlocks['social'][app])" @change="toggleAppBlock('social', app, $event.target.checked)" class="sr-only peer">
+                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500"></div>
+                        </label>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Gaming Category -->
+                <div class="space-y-3 bg-slate-50 dark:bg-neutral-800/40 p-4 rounded-xl border border-slate-200 dark:border-neutral-800/80">
+                  <div class="flex items-center justify-between">
+                    <span class="text-2xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 flex items-center gap-2">
+                      <i class="fa-solid fa-gamepad text-purple-500 dark:text-purple-400"></i> Gaming
+                    </span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" :checked="parentalAppBlocks['gaming'] && parentalAppBlocks['gaming']['all']" @change="toggleAppBlock('gaming', 'all', $event.target.checked)" class="sr-only peer">
+                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                      <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
+                    </label>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                    <template x-for="app in ['roblox', 'fortnite', 'steam', 'minecraft', 'discord', 'playstation', 'xbox']">
+                      <div class="flex items-center justify-between p-2.5 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-3xs font-semibold text-slate-700 dark:text-neutral-300">
+                        <span x-text="app.charAt(0).toUpperCase() + app.slice(1)"></span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" :disabled="parentalAppBlocks['gaming'] && parentalAppBlocks['gaming']['all']" :checked="parentalAppBlocks['gaming'] && (parentalAppBlocks['gaming']['all'] || parentalAppBlocks['gaming'][app])" @change="toggleAppBlock('gaming', app, $event.target.checked)" class="sr-only peer">
+                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500"></div>
+                        </label>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Entertainment / Streaming Category -->
+                <div class="space-y-3 bg-slate-50 dark:bg-neutral-800/40 p-4 rounded-xl border border-slate-200 dark:border-neutral-800/80">
+                  <div class="flex items-center justify-between">
+                    <span class="text-2xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 flex items-center gap-2">
+                      <i class="fa-solid fa-film text-red-500 dark:text-red-400"></i> Entertainment & Video
+                    </span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" :checked="parentalAppBlocks['entertainment'] && parentalAppBlocks['entertainment']['all']" @change="toggleAppBlock('entertainment', 'all', $event.target.checked)" class="sr-only peer">
+                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                      <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
+                    </label>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                    <template x-for="app in ['youtube', 'netflix', 'twitch', 'disney', 'prime']">
+                      <div class="flex items-center justify-between p-2.5 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-3xs font-semibold text-slate-700 dark:text-neutral-300">
+                        <span x-text="app.charAt(0).toUpperCase() + app.slice(1)"></span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" :disabled="parentalAppBlocks['entertainment'] && parentalAppBlocks['entertainment']['all']" :checked="parentalAppBlocks['entertainment'] && (parentalAppBlocks['entertainment']['all'] || parentalAppBlocks['entertainment'][app])" @change="toggleAppBlock('entertainment', app, $event.target.checked)" class="sr-only peer">
+                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500"></div>
+                        </label>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Adult Content Category -->
+                <div class="bg-slate-50 dark:bg-neutral-800/40 p-4 rounded-xl border border-slate-200 dark:border-neutral-800/80 flex items-center justify-between">
+                  <span class="text-2xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-orange-500 dark:text-orange-400"></i> Adult Content (18+)
+                  </span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" :checked="parentalAppBlocks['adult'] && parentalAppBlocks['adult']['all']" @change="toggleAppBlock('adult', 'all', $event.target.checked)" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                    <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
+                  </label>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Right Side: Downtime Schedules -->
+            <div class="lg:col-span-5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-2xl space-y-6">
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-neutral-800 pb-4">
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-lime-600 dark:text-lime-400"></i> Downtime Schedules
+                  </h3>
+                  <p class="text-3xs text-slate-500 dark:text-neutral-400 mt-0.5">Enforce blockout periods by day and category.</p>
+                </div>
+                <button @click="newDowntimeGroupId = parentalGroups.length > 0 ? parentalGroups[0].id : ''; showCreateDowntimeModal = true" class="bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold py-1.5 px-3 rounded-xl text-3xs transition duration-150">
+                  + Add New
+                </button>
+              </div>
+
+              <!-- List of schedules -->
+              <div class="space-y-4">
+                <template x-for="s in downtimeSchedules" :key="s.id">
+                  <div class="bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-4 rounded-xl flex items-center justify-between">
+                    <div class="space-y-1">
+                      <div class="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                        <span x-text="s.name"></span>
+                        <span class="px-1.5 py-0.5 rounded bg-lime-500/10 text-lime-700 dark:text-lime-400 text-4xs font-semibold uppercase tracking-wider" x-text="s.group_name"></span>
+                      </div>
+                      <div class="text-2xs font-mono text-slate-600 dark:text-neutral-400">
+                        <i class="fa-solid fa-clock mr-1 text-slate-400 dark:text-neutral-500"></i>
+                        <span x-text="s.start_time"></span> &ndash; <span x-text="s.end_time"></span>
+                      </div>
+                      <div class="text-3xs text-slate-500 dark:text-neutral-500 flex flex-wrap gap-1">
+                        <template x-for="day in s.days_of_week.split(',')">
+                          <span class="px-1 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded" x-text="day"></span>
+                        </template>
+                      </div>
+                      <div class="text-3xs text-lime-600 dark:text-lime-400 mt-1 font-semibold">
+                        <span x-text="s.blocked_categories.length === 0 ? '🚫 Entire Internet Blocked' : '🚫 Blocked: ' + s.blocked_categories.join(', ')"></span>
+                      </div>
+                    </div>
+                    <button @click="deleteDowntimeSchedule(s.id)" class="text-slate-500 hover:text-red-500 transition px-2 py-1"><i class="fa-solid fa-trash-can"></i></button>
+                  </div>
+                </template>
+                
+                <div x-show="downtimeSchedules.length === 0" class="text-center py-12 text-slate-400 dark:text-neutral-500 border-2 border-dashed border-slate-200 dark:border-neutral-800 rounded-xl">
+                  <div class="text-xl mb-2 text-slate-300 dark:text-neutral-600"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                  <div class="text-2xs">No downtime schedules configured.</div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CREATE DOWNTIME MODAL -->
+        <div x-show="showCreateDowntimeModal" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/50 dark:bg-neutral-950/70" x-cloak>
+          <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-fade">
+            <div class="p-6 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+              <h3 class="text-md font-bold text-slate-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-clock text-lime-600 dark:text-lime-400"></i> Create Downtime Schedule</h3>
+              <button @click="showCreateDowntimeModal = false" class="text-slate-500 hover:text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+              <!-- Name -->
+              <div>
+                <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">Schedule Name</label>
+                <input type="text" x-model="newDowntimeName" placeholder="e.g. Bedtime, School Hours" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+              </div>
+
+              <!-- Group Selector -->
+              <div>
+                <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">Target Client Group</label>
+                <select x-model="newDowntimeGroupId" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-950 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                  <template x-for="g in parentalGroups" :key="g.id">
+                    <option :value="g.id" x-text="g.name"></option>
+                  </template>
+                </select>
+              </div>
+
+              <!-- Time Inputs -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">Start Time (24h)</label>
+                  <input type="time" x-model="newDowntimeStart" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                </div>
+                <div>
+                  <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">End Time (24h)</label>
+                  <input type="time" x-model="newDowntimeEnd" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                </div>
+              </div>
+
+              <!-- Days of Week -->
+              <div>
+                <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1.5">Active Days</label>
+                <div class="flex flex-wrap gap-1">
+                  <template x-for="day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']">
+                    <button 
+                      @click="newDowntimeDays.includes(day) ? newDowntimeDays = newDowntimeDays.filter(d => d !== day) : newDowntimeDays.push(day)" 
+                      class="px-2 py-1.5 rounded-lg text-3xs font-semibold transition border duration-105"
+                      :class="newDowntimeDays.includes(day) ? 'bg-lime-500 border-lime-500 text-neutral-950' : 'bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700'"
+                      x-text="day"
+                    ></button>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Blocked Categories -->
+              <div>
+                <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1.5">What to block during this period?</label>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox" id="blockAllInternet" :checked="newDowntimeCategories.length === 0" @change="if ($event.target.checked) newDowntimeCategories = []" class="rounded bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-lime-500 focus:ring-0">
+                    <label for="blockAllInternet" class="text-2xs font-semibold text-slate-800 dark:text-neutral-300">🚫 Entire Internet (Total Block)</label>
+                  </div>
+                  
+                  <div class="border-t border-slate-200 dark:border-neutral-800 my-2"></div>
+                  
+                  <template x-for="cat in ['social', 'gaming', 'entertainment', 'adult']">
+                    <div class="flex items-center gap-2 pl-4">
+                      <input type="checkbox" :disabled="newDowntimeCategories.length === 0" :checked="newDowntimeCategories.includes(cat)" @change="$event.target.checked ? newDowntimeCategories.push(cat) : newDowntimeCategories = newDowntimeCategories.filter(c => c !== cat)" class="rounded bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-lime-500 focus:ring-0">
+                      <span class="text-2xs text-slate-500 dark:text-neutral-400 capitalize" x-text="'Block ' + cat"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            
+            <div class="p-6 border-t border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800 flex items-center justify-end space-x-2">
+              <button @click="showCreateDowntimeModal = false" class="bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-white font-semibold py-2 px-4 rounded-xl text-3xs transition duration-150">
+                Cancel
+              </button>
+              <button @click="createDowntimeSchedule()" class="bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold py-2 px-4 rounded-xl text-3xs transition duration-150">
+                Save Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== TAB: SETUP GUIDE ==================== -->
+      <div x-show="activeTab === 'guide'" class="space-y-8" x-cloak>
+        <div>
+          <h2 class="text-3xl font-extrabold tracking-tight dark:text-white">How to Setup ZeroSink</h2>
+          <p class="text-gray-700 dark:text-neutral-300 text-sm mt-1">Configure your devices to route DNS requests through ZeroSink.</p>
+        </div>
+
+        <!-- Highlight Card -->
+        <div class="bg-lime-500/10 border border-lime-500/20 p-6 rounded-2xl shadow-sm space-y-3">
+          <h3 class="text-lg font-bold text-lime-700 dark:text-lime-400 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info"></i> Your ZeroSink DNS IP Address
+          </h3>
+          <p class="text-sm text-gray-700 dark:text-neutral-300">
+            Use the IP address below as the DNS Server setting in your device configuration:
+          </p>
+          <div class="flex items-center gap-3">
+            <code class="text-2xl font-mono font-extrabold text-white bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800 tracking-wider select-all" x-text="stats.system.local_ip || '127.0.0.1'"></code>
+            <span class="text-xs text-neutral-500 font-bold uppercase tracking-wider">(Double-click to select all)</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- 1. Router WAN/LAN Setup (Recommended) -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-wifi mr-2 text-lime-700 dark:text-lime-400"></i>1. Router Configuration (All Devices)
+            </h3>
+            <p class="text-xs text-gray-600 dark:text-neutral-400 leading-relaxed">
+              Configuring your home router automatically protects every device that connects to your home network (TVs, smart plugs, mobile phones, computers) without individual device setup.
+            </p>
+            <ol class="list-decimal pl-4 text-xs text-gray-700 dark:text-neutral-300 space-y-2">
+              <li>Log in to your router's admin panel (typically at <code class="bg-neutral-200 dark:bg-neutral-800 px-1 rounded">192.168.1.1</code> or <code class="bg-neutral-200 dark:bg-neutral-800 px-1 rounded">192.168.0.1</code>).</li>
+              <li>Navigate to **WAN Settings**, **LAN Settings**, or **DHCP Settings**.</li>
+              <li>Locate the **DNS Server** configuration section.</li>
+              <li>Set the Primary DNS Server IP to: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Save changes and restart your router or re-connect your devices to the Wi-Fi.</li>
+            </ol>
+          </div>
+
+          <!-- 2. Windows Client Setup -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-brands fa-windows mr-2 text-lime-700 dark:text-lime-400"></i>2. Windows Configuration
+            </h3>
+            <ol class="list-decimal pl-4 text-xs text-gray-700 dark:text-neutral-300 space-y-2">
+              <li>Open **Settings** > **Network &amp; internet** > **Wi-Fi** or **Ethernet**.</li>
+              <li>Click on the name of your active connection.</li>
+              <li>Scroll down to **DNS server assignment** and click **Edit**.</li>
+              <li>Select **Manual**, toggle IPv4 **On**, and enter: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Save settings. Open command prompt and run <code class="bg-neutral-200 dark:bg-neutral-800 px-1 rounded">ipconfig /flushdns</code>.</li>
+            </ol>
+          </div>
+
+          <!-- 3. macOS Setup -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-brands fa-apple mr-2 text-lime-700 dark:text-lime-400"></i>3. macOS Configuration
+            </h3>
+            <ol class="list-decimal pl-4 text-xs text-gray-700 dark:text-neutral-300 space-y-2">
+              <li>Go to **System Settings** > **Network**.</li>
+              <li>Select your active connection (Wi-Fi or Ethernet) and click **Details...**</li>
+              <li>Select the **DNS** tab in the sidebar.</li>
+              <li>Under DNS Servers, click the **+** button and enter: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Click **OK** and then **Apply** to save.</li>
+            </ol>
+          </div>
+
+          <!-- 4. iOS / Android Mobile Setup -->
+          <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
+            <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
+              <i class="fa-solid fa-mobile-screen-button mr-2 text-lime-700 dark:text-lime-400"></i>4. Mobile Devices (iOS &amp; Android)
+            </h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-500">Settings apply only when connected to your home Wi-Fi.</p>
+            <ol class="list-decimal pl-4 text-xs text-gray-700 dark:text-neutral-300 space-y-2">
+              <li>Open your device's Wi-Fi Settings and tap the **Info (i)** or gear icon next to your network.</li>
+              <li>Look for the **DNS** configuration option (often set to Automatic).</li>
+              <li>Switch it to **Manual**.</li>
+              <li>Delete existing servers and add: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Save settings.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- APP LOGIC (Alpine.js structure) -->
+  <script>
+    function zeroSinkApp() {
+      return {
+        // Auth State
+        token: localStorage.getItem('zerosink_token') || '',
+        theme: localStorage.getItem('zerosink_theme') || 'dark',
+        activeTab: 'dashboard',
+        
+        loginUsername: '',
+        loginPassword: '',
+        loginError: '',
+        require2fa: false,
+        login2faCode: '',
+        temp2faToken: '',
+        
+        // Update Notification State
+        showUpdateBadge: false,
+        latestVersion: '',
+        updateAvailable: false,
+        updating: false,
+        updateMessage: '',
+        updateError: '',
+        latestChangelog: '',
+        
+        // Initial Setup State
+        requireSetup: false,
+        setupNewPassword: '',
+        setupConfirmPassword: '',
+        setupTotpEnabled: false,
+        setupShowTotp: false,
+        setupTotpSecret: '',
+        setupTotpQrUri: '',
+        setupTotpCode: '',
+        setupError: '',
+        setupMalwareList: true,
+        setupTrackingList: true,
+
+        // Password Preview states
+        showLoginPassword: false,
+        showOldPassword: false,
+        showNewPassword: false,
+        showConfirmPassword: false,
+        showSetupPassword: false,
+        showSetupConfirmPassword: false,
+        showDisable2faPassword: false,
+        
+        // 2FA Security State
+        totpEnabled: false,
+        showTotpSetup: false,
+        totpSecret: '',
+        totpQrUri: '',
+        totpConfirmCode: '',
+        disable2faPassword: '',
+        totpError: '',
+        
+        // Navigation states
+        showCreateGroupModal: false,
+        showMobileMenu: false,
+        mobileShowDetails: false,
+        activeGroupSubTab: 'clients',
+        adlistSearch: '',
+        ruleSearch: '',
+        defaultListsToSelect: [],
+        customListsToSelect: [],
+        uniqueDbLists: [],
+        discoverCuratedLists: [
+          { name: "EasyPrivacy", desc: "Advanced tracking and privacy blocklist.", category: "Privacy", url: "https://v.firebog.net/hosts/Easyprivacy.txt" },
+          { name: "URLhaus Malware", desc: "Real-time malicious domain database by abuse.ch.", category: "Security", url: "https://urlhaus.abuse.ch/downloads/hostfile/" },
+          { name: "OISD Basic", desc: "Cleaned and highly compatible internet blocklist.", category: "Ads", url: "https://small.oisd.nl" },
+          { name: "Peter Lowe's List", desc: "Long-standing list of ad and tracking servers.", category: "Ads", url: "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext" },
+          { name: "Phishing Army", desc: "Protects against phishing, scam, and fraud sites.", category: "Security", url: "https://phishing.army/download/phishing_army_blocklist.txt" },
+          { name: "NoCoin Cryptomining", desc: "Blocks browser-based cryptocurrency miners.", category: "Security", url: "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt" },
+          { name: "SmartTV Telemetry", desc: "Blocks telemetry and tracking on smart TVs.", category: "Telemetry", url: "https://v.firebog.net/hosts/AdguardTelemetry.txt" }
+        ],
+        
+        // Data models
+        stats: {
+          summary: { total_queries: 0, blocked_queries: 0, allowed_queries: 0, whitelisted_queries: 0, block_rate_percent: 0 },
+          history: [],
+          top_allowed: [],
+          top_blocked: [],
+          top_clients: [],
+          query_types: [],
+          system: { db_size_bytes: 0, process_ram_mb: 0, system_ram_pct: 0, cpu_pct: 0, dns_cache_size: 0, uptime_seconds: 0 }
+        },
+        logs: [],
+        groups: [],
+        selectedGroupId: 1,
+        selectedGroupDetails: null,
+        
+        // Forms inputs
+        newGroupName: '',
+        newGroupDesc: '',
+        newClientIp: '',
+        newClientName: '',
+        newClientGroupId: 1,
+        newAdlistName: '',
+        newAdlistUrl: '',
+        newRuleDomain: '',
+        newRuleType: 'deny',
+        newRuleIsRegex: false,
+        
+        passwordOld: '',
+        passwordNew: '',
+        passwordConfirm: '',
+        passwordMessage: '',
+        passwordError: '',
+        
+        upstreamDns: '',
+        upstreamDnsMessage: '',
+        upstreamDnsError: '',
+        
+        // Search & Filter
+        logSearch: '',
+        logStatusFilter: '',
+        logAutoPoll: true,
+        
+        // Loader states
+        compiling: false,
+        importing: false,
+        
+        // Toast
+        toast: { show: false, message: '', type: 'success' },
+        
+        // New Features State
+        pauseStatus: { disabled: false, remaining_seconds: 0, blocking_disabled_until: 0.0 },
+        privacyMode: 0,
+        logRetentionDays: 7,
+        newLocalDnsDomain: '',
+        newLocalDnsIp: '',
+        newLocalDnsType: 'A',
+        localDnsRecords: [],
+        dhcpEnabled: false,
+        dhcpRangeStart: '',
+        dhcpRangeEnd: '',
+        dhcpRouter: '',
+        dhcpSubnetMask: '255.255.255.0',
+        dhcpLeaseTime: 86400,
+        dhcpLeases: [],
+        
+        // SSL State
+        sslConfigured: false,
+        sslInfo: null,
+        sslCAAvailable: false,
+        sslPort: 80,
+        showCustomSslModal: false,
+        customSslCert: '',
+        customSslKey: '',
+        customSslError: '',
+        rebooting: false,
+        showSslInstructions: false,
+        
+        // Parental & Premium State
+        premiumActive: false,
+        premiumLicenseKey: '',
+        premiumExpiresAt: '',
+        premiumCustomerPortal: '',
+        premiumActivationError: '',
+        
+        parentalGroups: [],
+        selectedParentalGroupId: null,
+        parentalAppBlocks: {},
+        downtimeSchedules: [],
+        
+        showCreateDowntimeModal: false,
+        newDowntimeName: '',
+        newDowntimeGroupId: '',
+        newDowntimeStart: '21:00',
+        newDowntimeEnd: '07:00',
+        newDowntimeDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        newDowntimeCategories: [],
+        
+        // Polling references
+        statsTimer: null,
+        logsTimer: null,
+        pauseTimer: null,
+
+        init() {
+          // Dark mode class toggle
+          document.documentElement.classList.toggle('dark', this.theme === 'dark');
+          
+          this.$watch('theme', val => {
+            document.documentElement.classList.toggle('dark', val === 'dark');
+            localStorage.setItem('zerosink_theme', val);
+            if (this.activeTab === 'dashboard') {
+              this.renderChart();
+            }
+          });
+          
+          if (this.token) {
+            this.initApp();
+          }
+          
+          // Setup periodic pollers
+          this.statsTimer = setInterval(() => {
+            if (this.token && this.activeTab === 'dashboard') {
+              this.loadStats(false); // Silent reload
+            }
+          }, 5000);
+          
+          this.logsTimer = setInterval(() => {
+            if (this.token && this.activeTab === 'logs' && this.logAutoPoll) {
+              this.loadLogs(true);
+            }
+          }, 3000);
+
+          // Poll pause status every 5s and run a local 1s countdown
+          this.pauseTimer = setInterval(() => {
+            if (this.token) {
+              this.loadPauseStatus();
+            }
+          }, 5000);
+
+          setInterval(() => {
+            if (this.token && this.pauseStatus.disabled && this.pauseStatus.remaining_seconds > 0) {
+              this.pauseStatus.remaining_seconds--;
+            }
+          }, 1000);
+        },
+
+        toggleTheme() {
+          this.theme = this.theme === 'dark' ? 'light' : 'dark';
+        },
+
+        showToastMessage(msg, type = 'success') {
+          this.toast.message = msg;
+          this.toast.type = type;
+          this.toast.show = true;
+          setTimeout(() => { this.toast.show = false; }, 4000);
+        },
+
+        // API Fetch Wrapper
+        async fetchApi(endpoint, options = {}) {
+          options.headers = options.headers || {};
+          if (this.token) {
+            options.headers['Authorization'] = `Bearer ${this.token}`;
+          }
+          
+          try {
+            const resp = await fetch(endpoint, options);
+            if (resp.status === 401) {
+              this.logout();
+              throw new Error("Session expired.");
+            }
+            if (!resp.ok) {
+              const body = await resp.json().catch(() => ({}));
+              throw new Error(body.detail || `Server responded with ${resp.status}`);
+            }
+            return resp;
+          } catch (e) {
+            console.error(`Fetch API Error [${endpoint}]:`, e);
+            throw e;
+          }
+        },
+
+        async login() {
+          this.loginError = '';
+          try {
+            const resp = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: this.loginUsername, password: this.loginPassword })
+            });
+            
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({ detail: 'Login failed' }));
+              throw new Error(err.detail || 'Login failed');
+            }
+            
+            const data = await resp.json();
+            
+            if (data.require_setup) {
+              this.requireSetup = true;
+              this.temp2faToken = data.temp_token;
+              this.setupNewPassword = '';
+              this.setupConfirmPassword = '';
+              this.setupTotpEnabled = false;
+              this.setupShowTotp = false;
+              this.setupError = '';
+              return;
+            }
+            
+            if (data.require_2fa) {
+              this.require2fa = true;
+              this.temp2faToken = data.temp_token;
+              this.login2faCode = '';
+              return;
+            }
+            
+            this.token = data.access_token;
+            localStorage.setItem('zerosink_token', this.token);
+            
+            this.loginUsername = '';
+            this.loginPassword = '';
+            
+            this.initApp();
+            this.showToastMessage("Logged in successfully.");
+          } catch (e) {
+            this.loginError = e.message;
+          }
+        },
+
+        async verify2fa() {
+          this.loginError = '';
+          try {
+            const resp = await fetch('/api/auth/verify-2fa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ temp_token: this.temp2faToken, code: this.login2faCode })
+            });
+            
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({ detail: 'Verification failed' }));
+              throw new Error(err.detail || 'Verification failed');
+            }
+            
+            const data = await resp.json();
+            this.token = data.access_token;
+            localStorage.setItem('zerosink_token', this.token);
+            
+            this.loginUsername = '';
+            this.loginPassword = '';
+            this.require2fa = false;
+            this.temp2faToken = '';
+            this.login2faCode = '';
+            
+            this.initApp();
+            this.showToastMessage("Logged in successfully.");
+          } catch (e) {
+            this.loginError = e.message;
+          }
+        },
+
+        generateSetup2fa() {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+          let secret = '';
+          for (let i = 0; i < 32; i++) {
+            secret += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          this.setupTotpSecret = secret;
+          this.setupTotpQrUri = `otpauth://totp/ZeroSink:${this.loginUsername || 'admin'}?secret=${secret}&issuer=ZeroSink`;
+          
+          this.$nextTick(() => {
+            const canvas = document.getElementById('setupTotpQrCanvas');
+            if (canvas) {
+              new QRious({
+                element: canvas,
+                value: this.setupTotpQrUri,
+                size: 176,
+                background: '#ffffff',
+                foreground: '#000000',
+                level: 'H'
+              });
+            }
+          });
+        },
+
+        async completeSetup(skipAll = false) {
+          this.setupError = '';
+          
+          let new_password = null;
+          let totp_secret = null;
+          let totp_code = null;
+          let selected_lists = [];
+          
+          if (!skipAll) {
+            if (this.setupNewPassword || this.setupConfirmPassword) {
+              if (this.setupNewPassword !== this.setupConfirmPassword) {
+                this.setupError = "New passwords do not match.";
+                return;
+              }
+              new_password = this.setupNewPassword;
+            }
+            
+            if (this.setupTotpEnabled) {
+              if (!this.setupTotpCode) {
+                this.setupError = "Please enter the 2FA verification code.";
+                return;
+              }
+              totp_secret = this.setupTotpSecret;
+              totp_code = this.setupTotpCode;
+            }
+            
+            if (this.setupMalwareList) selected_lists.push("malware");
+            if (this.setupTrackingList) selected_lists.push("tracking");
+          }
+          
+          try {
+            const resp = await fetch('/api/auth/complete-setup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                temp_token: this.temp2faToken,
+                new_password: new_password,
+                totp_secret: totp_secret,
+                totp_code: totp_code,
+                selected_lists: selected_lists
+              })
+            });
+            
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({ detail: 'Setup completion failed' }));
+              throw new Error(err.detail || 'Setup completion failed');
+            }
+            
+            const data = await resp.json();
+            this.token = data.access_token;
+            localStorage.setItem('zerosink_token', this.token);
+            
+            this.loginUsername = '';
+            this.loginPassword = '';
+            this.requireSetup = false;
+            this.temp2faToken = '';
+            this.setupNewPassword = '';
+            this.setupConfirmPassword = '';
+            this.setupTotpEnabled = false;
+            this.setupShowTotp = false;
+            this.setupTotpSecret = '';
+            this.setupTotpQrUri = '';
+            this.setupTotpCode = '';
+            
+            this.initApp();
+            this.showToastMessage(skipAll ? "Setup skipped. Logged in successfully." : "Setup completed successfully!");
+          } catch (e) {
+            this.setupError = e.message;
+          }
+        },
+
+        logout() {
+          this.token = '';
+          localStorage.removeItem('zerosink_token');
+          this.stats = null;
+          this.logs = [];
+          this.groups = [];
+          this.selectedGroupDetails = null;
+          this.totpEnabled = false;
+          this.showTotpSetup = false;
+          this.requireSetup = false;
+          this.setupNewPassword = '';
+          this.setupConfirmPassword = '';
+          this.setupTotpEnabled = false;
+          this.setupShowTotp = false;
+        },
+
+        initApp() {
+          this.activeTab = 'dashboard';
+          this.loadStats();
+          this.check2faStatus();
+          this.checkForUpdates();
+          this.loadPauseStatus();
+          this.loadLocalDns();
+          this.loadPrivacySettings();
+          this.loadDhcpSettings();
+          this.loadDhcpLeases();
+          this.loadParentalStatus();
+        },
+
+        async checkForUpdates() {
+          try {
+            // Query GitHub Releases API for latest release
+            const response = await fetch('https://api.github.com/repos/devslice/zerosink/releases/latest');
+            if (response.ok) {
+              const data = await response.json();
+              const latestVersion = data.tag_name || '';
+              const latestClean = latestVersion.replace(/^v/, '');
+              
+              if (!latestClean) return;
+              this.latestVersion = latestClean;
+              this.latestChangelog = data.body || '';
+
+              // Read local version from backend stats
+              let currentVersion = "1.0.0";
+              if (this.stats && this.stats.system && this.stats.system.version) {
+                currentVersion = this.stats.system.version;
+              } else {
+                const statsResp = await this.fetchApi('/api/stats/summary');
+                const statsData = await statsResp.json();
+                currentVersion = statsData.system.version;
+              }
+              const currentClean = currentVersion.replace(/^v/, '');
+
+              // Compare semantic versions (major.minor.patch)
+              const latestParts = latestClean.split('.').map(Number);
+              const currentParts = currentClean.split('.').map(Number);
+              let hasUpdate = false;
+              for (let i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
+                const l = latestParts[i] || 0;
+                const c = currentParts[i] || 0;
+                if (l > c) {
+                  hasUpdate = true;
+                  break;
+                } else if (l < c) {
+                  break;
+                }
+              }
+              this.showUpdateBadge = hasUpdate;
+              this.updateAvailable = hasUpdate;
+            }
+          } catch (e) {
+            console.warn("Failed to check for updates from GitHub:", e);
+          }
+        },
+
+        async installUpdate() {
+          if (!confirm(`Are you sure you want to upgrade ZeroSink to version v${this.latestVersion}?`)) {
+            return;
+          }
+          this.updating = true;
+          this.updateMessage = 'Initiating update process...';
+          this.updateError = '';
+          try {
+            const resp = await this.fetchApi('/api/system/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ version: this.latestVersion })
+            });
+            if (resp.ok) {
+              this.updateMessage = 'Update triggered successfully! ZeroSink is updating dependencies and restarting. This dashboard will automatically reconnect in a few seconds...';
+              
+              // Periodically check if backend is back online, then reload
+              setTimeout(() => {
+                const checkInterval = setInterval(async () => {
+                  try {
+                    const checkResp = await fetch('/api/auth/status', {
+                      headers: { 'Authorization': `Bearer ${this.token}` }
+                    });
+                    if (checkResp.ok) {
+                      clearInterval(checkInterval);
+                      this.showToastMessage("System updated successfully!");
+                      window.location.reload();
+                    }
+                  } catch (err) {
+                    // Still offline, wait
+                  }
+                }, 2000);
+              }, 6000);
+            } else {
+              const errData = await resp.json();
+              this.updateError = errData.detail || 'Failed to trigger update.';
+              this.updating = false;
+            }
+          } catch (err) {
+            this.updateError = 'Network connection lost. The server is likely restarting to apply the update.';
+            
+            // Reconnect loop in case it started restarting immediately
+            setTimeout(() => {
+              const checkInterval = setInterval(async () => {
+                try {
+                  const checkResp = await fetch('/api/auth/status', {
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                  });
+                  if (checkResp.ok) {
+                    clearInterval(checkInterval);
+                    this.showToastMessage("System updated successfully!");
+                    window.location.reload();
+                  }
+                } catch (err) {
+                  // Still offline, wait
+                }
+              }, 2000);
+            }, 6000);
+          }
+        },
+
+        async check2faStatus() {
+          if (!this.token) return;
+          try {
+            const resp = await this.fetchApi('/api/auth/status');
+            const data = await resp.json();
+            this.totpEnabled = data.totp_enabled;
+          } catch (e) {
+            console.error("Failed to check 2FA status:", e);
+          }
+        },
+
+        async start2faSetup() {
+          this.totpError = '';
+          this.totpConfirmCode = '';
+          try {
+            const resp = await this.fetchApi('/api/auth/setup-2fa');
+            const data = await resp.json();
+            this.totpSecret = data.secret;
+            this.totpQrUri = data.provisioning_uri;
+            this.showTotpSetup = true;
+            
+            this.$nextTick(() => {
+              const canvas = document.getElementById('totpQrCanvas');
+              if (canvas) {
+                new QRious({
+                  element: canvas,
+                  value: this.totpQrUri,
+                  size: 176,
+                  background: '#ffffff',
+                  foreground: '#000000',
+                  level: 'H'
+                });
+              }
+            });
+          } catch (e) {
+            this.showToastMessage("Failed to initiate 2FA setup: " + e.message, "error");
+          }
+        },
+
+        async confirm2faEnable() {
+          this.totpError = '';
+          try {
+            await this.fetchApi('/api/auth/enable-2fa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret: this.totpSecret, code: this.totpConfirmCode })
+            });
+            this.totpEnabled = true;
+            this.showTotpSetup = false;
+            this.totpSecret = '';
+            this.totpQrUri = '';
+            this.totpConfirmCode = '';
+            this.showToastMessage("Two-factor authentication enabled successfully!");
+          } catch (e) {
+            this.totpError = e.message;
+          }
+        },
+
+        async disable2fa() {
+          this.totpError = '';
+          try {
+            await this.fetchApi('/api/auth/disable-2fa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: this.disable2faPassword })
+            });
+            this.totpEnabled = false;
+            this.disable2faPassword = '';
+            this.showToastMessage("Two-factor authentication disabled.");
+          } catch (e) {
+            this.totpError = e.message;
+          }
+        },
+
+        async loadStats(showSpinner = true) {
+          try {
+            const resp = await this.fetchApi('/api/stats/summary');
+            const data = await resp.json();
+            this.stats = data;
+            this.$nextTick(() => this.renderChart());
+          } catch (e) {
+            // Log silent errors
+          }
+        },
+
+        async loadLogs(silent = false) {
+          try {
+            let url = `/api/logs?limit=100`;
+            if (this.logStatusFilter) url += `&status=${this.logStatusFilter}`;
+            if (this.logSearch) url += `&search=${encodeURIComponent(this.logSearch)}`;
+            
+            const resp = await this.fetchApi(url);
+            this.logs = await resp.json();
+          } catch (e) {
+            // Logs fetch failure
+          }
+        },
+
+        async loadGroups() {
+          try {
+            const resp = await this.fetchApi('/api/groups');
+            this.groups = await resp.json();
+            
+            // Auto load first group if selectedGroupId not set
+            if (this.groups.length > 0) {
+              const exists = this.groups.some(g => g.id === this.selectedGroupId);
+              if (!exists) {
+                this.selectedGroupId = this.groups[0].id;
+              }
+              this.loadGroupDetails(this.selectedGroupId);
+            }
+          } catch (e) {
+            this.showToastMessage("Failed to load groups: " + e.message, "error");
+          }
+        },
+
+        async loadGroupDetails(id) {
+          try {
+            const resp = await this.fetchApi(`/api/groups/${id}/details`);
+            this.selectedGroupDetails = await resp.json();
+            this.newClientGroupId = id;
+            
+            // Fetch unique db adlists for the discover section
+            const respUnique = await this.fetchApi('/api/adlists/unique');
+            if (respUnique.ok) {
+              this.uniqueDbLists = await respUnique.json();
+            }
+          } catch (e) {
+            this.showToastMessage("Failed loading group configurations: " + e.message, "error");
+          }
+        },
+
+        async openCreateGroup() {
+          this.newGroupName = '';
+          this.newGroupDesc = '';
+          this.defaultListsToSelect = [
+            { name: "StevenBlack Base Unified (Ads/Malware)", url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", checked: true },
+            { name: "AdGuard DNS Filter (Ads/Tracking)", url: "https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt", checked: true },
+            { name: "StevenBlack Porn Filter (Child Friendly)", url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts", checked: false },
+            { name: "Aegis Child Safety Filter (Child Friendly)", url: "https://raw.githubusercontent.com/0xDarkMatter/aegis-blocklist/master/hosts", checked: false }
+          ];
+          this.customListsToSelect = [];
+          
+          try {
+            const resp = await this.fetchApi('/api/adlists/unique');
+            if (resp.ok) {
+              const uniqueLists = await resp.json();
+              this.uniqueDbLists = uniqueLists;
+              const defaultUrls = this.defaultListsToSelect.map(l => l.url.toLowerCase());
+              this.customListsToSelect = uniqueLists
+                .filter(l => !defaultUrls.includes(l.url.toLowerCase()))
+                .map(l => ({ name: l.name, url: l.url, checked: false }));
+            }
+          } catch (e) {
+            console.error("Failed fetching unique adlists", e);
+          }
+          this.showCreateGroupModal = true;
+        },
+
+        async createGroup() {
+          try {
+            const selected_lists = [];
+            this.defaultListsToSelect.forEach(l => {
+              if (l.checked) selected_lists.push({ name: l.name, url: l.url });
+            });
+            this.customListsToSelect.forEach(l => {
+              if (l.checked) selected_lists.push({ name: l.name, url: l.url });
+            });
+
+            const resp = await this.fetchApi('/api/groups', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                name: this.newGroupName, 
+                description: this.newGroupDesc,
+                selected_lists: selected_lists
+              })
+            });
+            const data = await resp.json();
+            this.showCreateGroupModal = false;
+            this.showToastMessage(`Group "${this.newGroupName}" created.`);
+            this.selectedGroupId = data.id;
+            this.mobileShowDetails = true;
+            await this.loadGroups();
+            await this.loadGroupDetails(data.id);
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async deleteGroup(id) {
+          if (!confirm("Are you sure you want to delete this group? All clients and list mappings will be deleted.")) return;
+          try {
+            await this.fetchApi(`/api/groups/${id}`, { method: 'DELETE' });
+            this.showToastMessage("Group deleted.");
+            if (this.selectedGroupId === id) {
+              this.selectedGroupId = 1;
+            }
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async addClient() {
+          if (!this.newClientIp) return;
+          try {
+            await this.fetchApi('/api/clients', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                group_id: this.selectedGroupId, 
+                ip_or_cidr: this.newClientIp, 
+                name: this.newClientName 
+              })
+            });
+            this.newClientIp = '';
+            this.newClientName = '';
+            this.showToastMessage("Client added.");
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async deleteClient(id) {
+          try {
+            await this.fetchApi(`/api/clients/${id}`, { method: 'DELETE' });
+            this.showToastMessage("Client removed.");
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async addAdlist() {
+          if (!this.newAdlistUrl || !this.newAdlistName) return;
+          try {
+            await this.fetchApi('/api/adlists', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                group_id: this.selectedGroupId, 
+                name: this.newAdlistName, 
+                url: this.newAdlistUrl 
+              })
+            });
+            this.newAdlistUrl = '';
+            this.newAdlistName = '';
+            this.showToastMessage("Blocklist registered.");
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async toggleAdlist(id) {
+          try {
+            await this.fetchApi(`/api/adlists/${id}/toggle`, { method: 'POST' });
+            await this.loadGroupDetails(this.selectedGroupId);
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async deleteAdlist(id) {
+          try {
+            await this.fetchApi(`/api/adlists/${id}`, { method: 'DELETE' });
+            this.showToastMessage("Blocklist deleted.");
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async addAdlistFromDiscover(name, url) {
+          try {
+            await this.fetchApi('/api/adlists', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                group_id: this.selectedGroupId, 
+                name: name, 
+                url: url 
+              })
+            });
+            this.showToastMessage(`Blocklist "${name}" added.`);
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        isAdlistAdded(url) {
+          if (!this.selectedGroupDetails || !this.selectedGroupDetails.adlists) return false;
+          return this.selectedGroupDetails.adlists.some(l => l.url.toLowerCase() === url.toLowerCase());
+        },
+
+        getOtherGroupLists() {
+          if (!this.uniqueDbLists) return [];
+          const curatedUrls = this.discoverCuratedLists.map(l => l.url.toLowerCase());
+          const currentUrls = this.selectedGroupDetails && this.selectedGroupDetails.adlists
+            ? this.selectedGroupDetails.adlists.map(l => l.url.toLowerCase())
+            : [];
+          return this.uniqueDbLists.filter(l => {
+            const urlLower = l.url.toLowerCase();
+            return !curatedUrls.includes(urlLower) && !currentUrls.includes(urlLower);
+          });
+        },
+
+        async compileLists() {
+          this.compiling = true;
+          try {
+            await this.fetchApi(`/api/adlists/compile?group_id=${this.selectedGroupId}`, { method: 'POST' });
+            this.showToastMessage("Lists compilation triggered in background.");
+            // Poll group details to refresh UI status
+            setTimeout(async () => {
+              await this.loadGroupDetails(this.selectedGroupId);
+              this.compiling = false;
+            }, 3000);
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+            this.compiling = false;
+          }
+        },
+
+        async addRule() {
+          if (!this.newRuleDomain) return;
+          try {
+            await this.fetchApi(`/api/groups/${this.selectedGroupId}/rules`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ domain: this.newRuleDomain, type: this.newRuleType, is_regex: this.newRuleIsRegex ? 1 : 0 })
+            });
+            this.newRuleDomain = '';
+            this.newRuleIsRegex = false;
+            this.showToastMessage("Custom rule added.");
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async deleteRule(id) {
+          try {
+            await this.fetchApi(`/api/custom-rules/${id}`, { method: 'DELETE' });
+            this.showToastMessage("Custom rule deleted.");
+            await this.loadGroupDetails(this.selectedGroupId);
+            await this.loadGroups();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async changePassword() {
+          this.passwordMessage = '';
+          this.passwordError = '';
+          
+          if (this.passwordNew !== this.passwordConfirm) {
+            this.passwordError = "New passwords do not match.";
+            return;
+          }
+          
+          try {
+            await this.fetchApi('/api/auth/change-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ old_password: this.passwordOld, new_password: this.passwordNew })
+            });
+            this.passwordMessage = "Password successfully updated.";
+            this.passwordOld = '';
+            this.passwordNew = '';
+            this.passwordConfirm = '';
+          } catch (e) {
+            this.passwordError = e.message;
+          }
+        },
+
+        async loadPauseStatus() {
+          try {
+            const resp = await this.fetchApi('/api/dns/pause-status');
+            this.pauseStatus = await resp.json();
+          } catch (e) {
+            console.error("Failed to load pause status:", e);
+          }
+        },
+
+        async pauseBlocking(duration) {
+          try {
+            const resp = await this.fetchApi('/api/dns/disable', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ duration: duration })
+            });
+            const data = await resp.json();
+            this.showToastMessage("Ad blocking paused.");
+            await this.loadPauseStatus();
+          } catch (e) {
+            this.showToastMessage("Failed to pause: " + e.message, "error");
+          }
+        },
+
+        async resumeBlocking() {
+          try {
+            await this.fetchApi('/api/dns/enable', { method: 'POST' });
+            this.showToastMessage("Ad blocking resumed.");
+            await this.loadPauseStatus();
+          } catch (e) {
+            this.showToastMessage("Failed to resume: " + e.message, "error");
+          }
+        },
+
+        async loadPrivacySettings() {
+          try {
+            const resp = await this.fetchApi('/api/settings/privacy');
+            const data = await resp.json();
+            this.privacyMode = data.privacy_mode;
+            this.logRetentionDays = data.log_retention_days;
+          } catch (e) {
+            console.error("Failed loading privacy settings:", e);
+          }
+        },
+
+        async updatePrivacySettings() {
+          try {
+            await this.fetchApi('/api/settings/privacy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ privacy_mode: parseInt(this.privacyMode), log_retention_days: parseInt(this.logRetentionDays) })
+            });
+            this.showToastMessage("Privacy settings updated.");
+          } catch (e) {
+            this.showToastMessage("Failed saving privacy settings: " + e.message, "error");
+          }
+        },
+
+        async loadLocalDns() {
+          try {
+            const resp = await this.fetchApi('/api/local-dns');
+            this.localDnsRecords = await resp.json();
+          } catch (e) {
+            console.error("Failed loading local DNS records:", e);
+          }
+        },
+
+        async addLocalDns() {
+          if (!this.newLocalDnsDomain || !this.newLocalDnsIp) return;
+          try {
+            await this.fetchApi('/api/local-dns', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ domain: this.newLocalDnsDomain, ip_address: this.newLocalDnsIp, record_type: this.newLocalDnsType })
+            });
+            this.newLocalDnsDomain = '';
+            this.newLocalDnsIp = '';
+            this.showToastMessage("Local DNS record registered.");
+            await this.loadLocalDns();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async deleteLocalDns(id) {
+          try {
+            await this.fetchApi(`/api/local-dns/${id}`, { method: 'DELETE' });
+            this.showToastMessage("Local DNS record deleted.");
+            await this.loadLocalDns();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        async loadDhcpSettings() {
+          try {
+            const resp = await this.fetchApi('/api/dhcp/settings');
+            const data = await resp.json();
+            this.dhcpEnabled = !!data.dhcp_enabled;
+            this.dhcpRangeStart = data.dhcp_range_start || '';
+            this.dhcpRangeEnd = data.dhcp_range_end || '';
+            this.dhcpRouter = data.dhcp_router || '';
+            this.dhcpSubnetMask = data.dhcp_subnet_mask || '255.255.255.0';
+            this.dhcpLeaseTime = data.dhcp_lease_time || 86400;
+          } catch (e) {
+            console.error("Failed loading DHCP settings:", e);
+          }
+        },
+
+        async updateDhcpSettings() {
+          try {
+            await this.fetchApi('/api/dhcp/settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                dhcp_enabled: this.dhcpEnabled ? 1 : 0,
+                dhcp_range_start: this.dhcpRangeStart,
+                dhcp_range_end: this.dhcpRangeEnd,
+                dhcp_router: this.dhcpRouter,
+                dhcp_subnet_mask: this.dhcpSubnetMask,
+                dhcp_lease_time: parseInt(this.dhcpLeaseTime)
+              })
+            });
+            this.showToastMessage("DHCP settings saved.");
+            await this.loadDhcpLeases();
+          } catch (e) {
+            this.showToastMessage("Failed saving DHCP settings: " + e.message, "error");
+          }
+        },
+
+        async loadDhcpLeases() {
+          try {
+            const resp = await this.fetchApi('/api/dhcp/leases');
+            this.dhcpLeases = await resp.json();
+          } catch (e) {
+            console.error("Failed loading DHCP leases:", e);
+          }
+        },
+
+        async releaseLease(mac) {
+          if (!confirm("Are you sure you want to release this DHCP lease?")) return;
+          try {
+            await this.fetchApi(`/api/dhcp/leases/${mac}`, { method: 'DELETE' });
+            this.showToastMessage("DHCP lease released.");
+            await this.loadDhcpLeases();
+          } catch (e) {
+            this.showToastMessage(e.message, "error");
+          }
+        },
+
+        formatTimestamp(timestampStr) {
+          try {
+            const val = parseFloat(timestampStr);
+            if (isNaN(val)) return timestampStr;
+            const date = new Date(val * 1000);
+            return date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
+          } catch (e) {
+            return timestampStr;
+          }
+        },
+
+
+
+        async triggerReboot(forceHttp = false) {
+          this.rebooting = true;
+          try {
+            await this.fetchApi('/api/system/restart', { method: 'POST' });
+          } catch (e) {
+            // Ignore error since process exits
+          }
+          
+          setTimeout(() => {
+            let attempt = 0;
+            const targetProto = forceHttp ? "http:" : (this.sslConfigured ? "https:" : window.location.protocol);
+            let targetHost = window.location.hostname;
+            const targetUrl = targetProto + "//" + targetHost + "/";
+            
+            const checkOnline = setInterval(async () => {
+              attempt++;
+              if (attempt > 30) {
+                clearInterval(checkOnline);
+                window.location.href = targetUrl;
+              }
+              try {
+                await fetch(targetUrl, { mode: 'no-cors', cache: 'no-store' });
+                clearInterval(checkOnline);
+                window.location.href = targetUrl;
+              } catch (err) {
+                console.log("Checking if online, attempt " + attempt);
+              }
+            }, 1500);
+          }, 2000);
+        },
+
+        downloadCa() {
+          this.fetchApi('/api/settings/ssl/ca')
+            .then(resp => {
+              if (resp.ok) return resp.blob();
+              throw new Error("CA not available");
+            })
+            .then(blob => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.style.display = 'none';
+              a.href = url;
+              a.download = 'zerosink_root_ca.crt';
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+              this.showToastMessage("Download failed: " + err.message, "error");
+            });
+        },
+
+        async loadSettings() {
+          this.upstreamDnsMessage = '';
+          this.upstreamDnsError = '';
+          try {
+            const resp = await this.fetchApi('/api/settings');
+            const data = await resp.json();
+            this.upstreamDns = data.upstream_dns || '';
+          } catch (e) {
+            this.upstreamDnsError = "Failed to load settings: " + e.message;
+          }
+        },
+
+        async updateSettings() {
+          this.upstreamDnsMessage = '';
+          this.upstreamDnsError = '';
+          try {
+            await this.fetchApi('/api/settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ upstream_dns: this.upstreamDns })
+            });
+            this.upstreamDnsMessage = "Upstream DNS settings updated successfully.";
+            this.showToastMessage("Upstream DNS updated.");
+          } catch (e) {
+            this.upstreamDnsError = e.message;
+          }
+        },
+
+        async backupConfig() {
+          try {
+            const resp = await this.fetchApi('/api/system/backup');
+            const blob = await resp.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'zerosink_backup.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            this.showToastMessage("Configuration backup downloaded.");
+          } catch (e) {
+            this.showToastMessage("Backup failed: " + e.message, "error");
+          }
+        },
+
+        async importConfig(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          
+          if (!confirm("Are you sure you want to restore configuration? This will overwrite all current groups, clients, adlists, and rules!")) {
+            event.target.value = '';
+            return;
+          }
+          
+          this.importing = true;
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          try {
+            const resp = await this.fetchApi('/api/system/import', {
+              method: 'POST',
+              body: formData
+            });
+            const data = await resp.json();
+            this.showToastMessage(data.message);
+            event.target.value = '';
+            this.initApp();
+          } catch (e) {
+            this.showToastMessage("Restore failed: " + e.message, "error");
+          } finally {
+            this.importing = false;
+          }
+        },
+
+        // Helper Formatters
+        formatDate(isoStr) {
+          try {
+            const date = new Date(isoStr);
+            return date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
+          } catch (e) {
+            return isoStr;
+          }
+        },
+
+        formatUptime(sec) {
+          const d = Math.floor(sec / (3600*24));
+          const h = Math.floor((sec % (3600*24)) / 3600);
+          const m = Math.floor((sec % 3600) / 60);
+          const s = sec % 60;
+          return `${d}d ${h}h ${m}m ${s}s`;
+        },
+
+        formatBytes(bytes) {
+          if (bytes === 0) return '0 Bytes';
+          const k = 1024;
+          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
+
+        renderChart() {
+          const ctx = document.getElementById('queriesChart');
+          if (!ctx) return;
+          
+          if (typeof Chart === 'undefined') {
+            console.error("Chart.js is not loaded. Please verify your internet connection or Content Security Policy.");
+            return;
+          }
+          
+          const history = this.stats.history || [];
+          // Get last 24 hours labels
+          const labels = history.map(h => {
+            const d = new Date(h.hour);
+            const hour = isNaN(d.getTime()) ? 0 : d.getHours();
+            return `${hour}:00`;
+          });
+          
+          const totalData = history.map(h => h.total);
+          const blockedData = history.map(h => h.blocked);
+          
+          const isDark = this.theme === 'dark';
+          const gridColor = isDark ? '#262626' : '#e5e7eb';
+          const textColor = isDark ? '#a3a3a3' : '#4b5563';
+          
+          // Update the chart if it already exists, otherwise create a new one.
+          // This avoids constant destruction/recreation which causes render loops and visual flickering.
+          const existingChart = Chart.getChart(ctx);
+          if (existingChart) {
+            existingChart.data.labels = labels;
+            existingChart.data.datasets[0].data = totalData;
+            existingChart.data.datasets[1].data = blockedData;
+            existingChart.options.scales.x.grid.color = gridColor;
+            existingChart.options.scales.y.grid.color = gridColor;
+            existingChart.options.scales.x.ticks.color = textColor;
+            existingChart.options.scales.y.ticks.color = textColor;
+            existingChart.options.plugins.legend.labels.color = textColor;
+            existingChart.update();
+            return;
+          }
+          
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Total Queries',
+                  data: totalData,
+                  borderColor: '#84cc16',
+                  backgroundColor: 'rgba(132, 204, 22, 0.1)',
+                  fill: true,
+                  tension: 0.4,
+                  borderWidth: 2,
+                  pointRadius: 2,
+                },
+                {
+                  label: 'Blocked Queries',
+                  data: blockedData,
+                  borderColor: '#ef4444',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  fill: true,
+                  tension: 0.4,
+                  borderWidth: 2,
+                  pointRadius: 2,
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  labels: {
+                    color: textColor,
+                    font: { family: 'Outfit', size: 12 },
+                    boxWidth: 28,
+                    boxHeight: 2
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { color: gridColor },
+                  ticks: { color: textColor, font: { family: 'Outfit' } }
+                },
+                y: {
+                  grid: { color: gridColor },
+                  ticks: { color: textColor, font: { family: 'Outfit' } },
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+        },
+
+        async loadParentalStatus() {
+          try {
+            const resp = await this.fetchApi('/api/premium/status');
+            const data = await resp.json();
+            this.premiumActive = data.active;
+            this.premiumLicenseKey = data.license_key;
+            this.premiumExpiresAt = data.expires_at;
+            this.premiumCustomerPortal = data.customer_portal_url;
+            
+            if (this.premiumActive) {
+              await this.loadDowntimeSchedules();
+              await this.loadParentalGroups();
+            }
+          } catch (e) {
+            console.error("Failed loading premium status:", e);
+          }
+        },
+
+        async activatePremium() {
+          this.premiumActivationError = '';
+          if (!this.premiumLicenseKey) return;
+          try {
+            const resp = await this.fetchApi('/api/premium/activate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ license_key: this.premiumLicenseKey })
+            });
+            const data = await resp.json();
+            this.showToastMessage(data.message);
+            await this.loadParentalStatus();
+          } catch (e) {
+            this.premiumActivationError = e.message;
+          }
+        },
+
+        async deactivatePremium() {
+          if (!confirm("Are you sure you want to deactivate Premium Parental Controls on this server?")) return;
+          try {
+            const resp = await this.fetchApi('/api/premium/deactivate', { method: 'POST' });
+            const data = await resp.json();
+            this.showToastMessage(data.message);
+            this.premiumActive = false;
+            this.premiumLicenseKey = '';
+            this.premiumExpiresAt = '';
+            this.premiumCustomerPortal = '';
+          } catch (e) {
+            this.showToastMessage("Failed deactivating premium: " + e.message, "error");
+          }
+        },
+
+        async loadParentalGroups() {
+          try {
+            const resp = await this.fetchApi('/api/groups');
+            this.parentalGroups = await resp.json();
+            if (this.parentalGroups.length > 0) {
+              if (!this.selectedParentalGroupId) {
+                this.selectedParentalGroupId = this.parentalGroups[0].id;
+              }
+              await this.loadGroupAppBlocks(this.selectedParentalGroupId);
+            }
+          } catch (e) {
+            console.error("Failed loading parental groups:", e);
+          }
+        },
+
+        async loadGroupAppBlocks(groupId) {
+          if (!groupId) return;
+          try {
+            const resp = await this.fetchApi(`/api/premium/app-blocks/${groupId}`);
+            this.parentalAppBlocks = await resp.json();
+          } catch (e) {
+            console.error(`Failed loading app blocks for group ${groupId}:`, e);
+          }
+        },
+
+        async toggleAppBlock(category, appName, enabled) {
+          if (!this.selectedParentalGroupId) return;
+          try {
+            await this.fetchApi(`/api/premium/app-blocks/${this.selectedParentalGroupId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                category: category,
+                app_name: appName,
+                enabled: enabled ? 1 : 0
+              })
+            });
+            this.showToastMessage("App block rules updated.");
+            await this.loadGroupAppBlocks(this.selectedParentalGroupId);
+          } catch (e) {
+            this.showToastMessage("Failed updating app block: " + e.message, "error");
+            this.parentalAppBlocks[category][appName] = !enabled;
+          }
+        },
+
+        async loadDowntimeSchedules() {
+          try {
+            const resp = await this.fetchApi('/api/premium/downtimes');
+            this.downtimeSchedules = await resp.json();
+          } catch (e) {
+            console.error("Failed loading downtime schedules:", e);
+          }
+        },
+
+        async createDowntimeSchedule() {
+          if (!this.newDowntimeName || !this.newDowntimeGroupId) {
+            this.showToastMessage("Schedule name and target group are required.", "error");
+            return;
+          }
+          try {
+            await this.fetchApi('/api/premium/downtimes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                group_id: parseInt(this.newDowntimeGroupId),
+                name: this.newDowntimeName,
+                start_time: this.newDowntimeStart,
+                end_time: this.newDowntimeEnd,
+                days_of_week: this.newDowntimeDays.join(','),
+                blocked_categories: this.newDowntimeCategories,
+                enabled: 1
+              })
+            });
+            this.showToastMessage("Downtime schedule saved.");
+            this.showCreateDowntimeModal = false;
+            this.newDowntimeName = '';
+            this.newDowntimeStart = '21:00';
+            this.newDowntimeEnd = '07:00';
+            this.newDowntimeDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            this.newDowntimeCategories = [];
+            
+            await this.loadDowntimeSchedules();
+          } catch (e) {
+            this.showToastMessage("Failed saving schedule: " + e.message, "error");
+          }
+        },
+
+        async deleteDowntimeSchedule(id) {
+          if (!confirm("Are you sure you want to delete this downtime schedule?")) return;
+          try {
+            await this.fetchApi(`/api/premium/downtimes/${id}`, { method: 'DELETE' });
+            this.showToastMessage("Downtime schedule deleted.");
+            await this.loadDowntimeSchedules();
+          } catch (e) {
+            this.showToastMessage("Failed deleting schedule: " + e.message, "error");
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
