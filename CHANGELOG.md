@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.7] - 2026-06-28
+
+### Changed
+- **Shield-Halved Icon Migration:** Replaced the custom "ZS" vector logo SVG with a Font Awesome `fa-shield-halved` icon across the Login Gate, Setup Gate, and both desktop/mobile sidebar layouts.
+- **Backend Logo Endpoint Update:** Updated the `/logo.svg` inline SVG path to a simplified solid shield geometry rendered in brand lime `#32cd32`.
+
 ## [1.0.6] - 2026-06-28
 
 ### Changed
