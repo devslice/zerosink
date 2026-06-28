@@ -2,6 +2,14 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.16] - 2026-06-28
+
+### Changed
+- **URL Hash-Based Autofill & Navigation**: Implemented browser URL hash transitions (`#2fa`) to notify password manager extensions to re-scan the DOM and automatically fill the TOTP code when transitioning to the 2FA screen.
+- **Autofill Compatibility Improvements**: Reverted Step 2 (2FA Verification) from dynamic DOM rendering (`x-if`) back to CSS-based rendering (`x-show`) to ensure the TOTP input exists in the DOM on page load, supporting managers with "auto-fill on page load" configurations.
+- **Attribute Refinement**: Renamed the TOTP input field's name attribute to `"totp"` and added `pattern="[0-9]*"` to match standard heuristics of 1Password, Bitwarden, and other password managers.
+- **Browser History Integration**: Added a global listener to the browser `hashchange` event to synchronize user back/forward history navigation directly with the multi-step login gate state.
+
 ## [1.0.15] - 2026-06-28
 
 ### Changed
