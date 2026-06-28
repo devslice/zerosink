@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.12] - 2026-06-28
+
+### Changed
+- **Login Form Architecture:** Restructured the dashboard login form to enforce numeric range anchors and mapped the input name token attribute, resolving tracking issues for Zoho Vault automatic TOTP injection — added `name`/`id` to username/password fields, converted TOTP to `type="number"` with `min`/`max` range, and set `name="token"`.
+
 ## [1.0.11] - 2026-06-28
 
 ### Changed

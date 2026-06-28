@@ -145,14 +145,16 @@
  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-neutral-500">
  <i class="lni lni-user-4"></i>
  </span>
- <input 
- type="text" 
- x-model="loginUsername" 
- class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 focus:outline-none transition" 
- placeholder="Username" 
- autocomplete="username"
- :required="!require2fa"
- >
+  <input 
+  type="text" 
+  name="username"
+  id="username"
+  x-model="loginUsername" 
+  class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 focus:outline-none transition" 
+  placeholder="Username" 
+  autocomplete="username"
+  :required="!require2fa"
+  >
  </div>
  </div>
 
@@ -162,14 +164,16 @@
  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-neutral-500">
  <i class="lni lni-locked-1"></i>
  </span>
- <input 
- :type="showLoginPassword ? 'text' : 'password'" 
- x-model="loginPassword" 
- class="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 focus:outline-none transition" 
- placeholder="Password" 
- autocomplete="current-password"
- :required="!require2fa"
- >
+  <input 
+  :type="showLoginPassword ? 'text' : 'password'" 
+  name="password"
+  id="password"
+  x-model="loginPassword" 
+  class="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 focus:outline-none transition" 
+  placeholder="Password" 
+  autocomplete="current-password"
+  :required="!require2fa"
+  >
  <button type="button" @click="showLoginPassword = !showLoginPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
  <i class="fa-solid" :class="showLoginPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
  </button>
@@ -194,17 +198,17 @@
  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-neutral-500">
  <i class="lni lni-key-1"></i>
  </span>
-  <input 
-  type="text"
-  id="totp"
-  name="totp"
-  x-model="login2faCode" 
-  class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 text-center tracking-[0.5em] text-lg focus:outline-none transition" 
-  placeholder="000000"
-  inputmode="numeric"
-  autocomplete="one-time-code"
-  tabindex="0"
-  >
+   <input 
+   type="number"
+   min="000000"
+   max="999999"
+   id="totp"
+   name="token"
+   x-model="login2faCode"
+   class="form-control w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 text-center tracking-[0.5em] text-lg focus:outline-none transition" 
+   placeholder="123456"
+   autocomplete="one-time-code"
+   >
  </div>
  <p class="text-gray-500 dark:text-neutral-500 text-xs mt-2 text-center">Enter the 6-digit verification code from your authenticator app.</p>
  </div>
