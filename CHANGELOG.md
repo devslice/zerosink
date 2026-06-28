@@ -2,6 +2,16 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.2] - 2026-06-28
+
+### Added
+- **Light Mode Blue Aesthetic:** Custom blue theme styling mapping in light mode (`#1d4ed8`) replacing all green highlight visual assets.
+- **Login & Setup Theme Support:** Updated both Login Gate and Initial Security Setup Gate cards to dynamically support light and dark modes, integrating the "ZS" vector logo badge.
+
+### Changed
+- **Spacious Sidebar:** Expanded desktop sidebar width from `md:w-24` (96px) to `md:w-28` (112px) to prevent layout tightness, adjusting hover tooltips.
+- **Blue Light Mode Chart:** Configured blocked queries chart border and area fill linear gradients to render in brand blue during light mode.
+
 ## [1.0.1] - 2026-06-28
 
 ### Added
