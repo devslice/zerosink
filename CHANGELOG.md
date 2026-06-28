@@ -2,7 +2,21 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.5] - 2026-06-28
+
+### Added
+- **Explicit Brand Accent Configuration:** Configured the primary brand color `#32CD32` (Lime Green) under the `brand-lime` namespace in the Tailwind config.
+
+### Changed
+- **Dark Mode Color Purge:** Purged all blue colors from the dark layout (including DNS cache metrics, whitelist status badges, privacy discover category badges, and social media icons), replacing them with variations of `#32CD32`.
+- **Accessible Multi-Theme Button Colors:** Overhauled 18 primary action buttons to dynamically adapt to light and dark modes. In light mode, they render as professional corporate blue with high-contrast white text (`text-white`); in dark mode, they transition to brand lime `#32CD32` with bold dark text (`text-neutral-950 font-bold`) for WCAG accessibility compliance.
+- **Improved Interactive States:** Adjusted active indicators, focus rings, checkboxes, and switch toggles to render with brand accent `#32CD32` when dark mode is enabled.
+- **Chart.js Brand Alignment:** Updated the blocked queries line chart and linear area fills to render in `#32CD32` during dark mode.
+- **Toast Notifications:** Styled success toast indicators with high contrast (`bg-blue-600` on light mode, and `#32CD32` on dark mode with dark bold text) for optimal readability.
+- **Vector Brand Logo & PWA Manifest:** Updated the hardcoded logo SVG path/text fill and the PWA manifest theme color in the backend to `#32cd32`.
+
 ## [1.0.4] - 2026-06-28
+
 
 ### Changed
 - **Forced Dark-Themed Login & Setup:** Standardized the Login Gate and Initial Security Setup Gate to be permanently dark-themed (`bg-neutral-950` with `bg-neutral-900` card and borders). This ensures that the bright lime green brand color `#8deb00` always renders with high-contrast text (`text-neutral-950` on buttons) and maximum readability.

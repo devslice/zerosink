@@ -44,7 +44,7 @@
               100: '#dbeafe',
               200: '#bfdbfe',
               300: '#93c5fd',
-              400: '#8deb00', // Neon green for dark mode highlights
+              400: '#32cd32', // Neon green for dark mode highlights
               500: '#1d4ed8', // Vibrant blue for light mode (WCAG AA)
               600: '#1e40af', // Dark blue for light mode
               700: '#1e3a8a', // Darkest navy for light mode
@@ -52,7 +52,8 @@
               900: '#0f1e40',
               950: '#0a1024',
             },
-            brandgreen: '#8deb00',
+            brandgreen: '#32cd32',
+            'brand-lime': '#32cd32',
             darkbg: '#0a0d14',
             darkcard: '#111622',
             darkborder: '#1b2231',
@@ -68,7 +69,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     .dark ::-webkit-scrollbar-track { background: #0a0d14; }
     .dark ::-webkit-scrollbar-thumb { background: #1b2231; border-radius: 3px; }
-    .dark ::-webkit-scrollbar-thumb:hover { background: #8deb00; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #32cd32; }
     
     ::-webkit-scrollbar-track { background: #f3f4f6; }
     ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
@@ -92,7 +93,7 @@
     x-transition:leave-end="opacity-0 translate-y-2"
     x-cloak
     class="fixed bottom-5 right-5 z-50 flex items-center p-4 rounded-lg shadow-lg border border-lime-500/30 backdrop-blur-md"
-    :class="toast.type === 'success' ? 'bg-lime-950/80 text-lime-400' : 'bg-red-950/80 text-red-400'"
+    :class="toast.type === 'success' ? 'bg-blue-600 text-white dark:bg-[#32cd32] dark:text-neutral-950 dark:font-bold' : 'bg-red-960/80 text-red-400'"
   >
     <span class="mr-2">
       <i class="fa-solid" :class="toast.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
@@ -459,13 +460,13 @@
           >
             <!-- Left indicator line -->
             <div 
-              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 dark:bg-brand-lime rounded-r-md transition-all duration-300 hidden md:block"
               :class="activeTab === 'dashboard' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
             ></div>
             <!-- Icon Wrapper -->
             <div 
               class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
-              :class="activeTab === 'dashboard' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+              :class="activeTab === 'dashboard' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 dark:border-brand-lime/30 shadow-[0_0_12px_rgba(29,78,216,0.15)] dark:shadow-[0_0_12px_rgba(50,205,50,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
             >
               <i class="fa-solid fa-table-cells-large text-base md:text-lg"></i>
             </div>
@@ -483,12 +484,12 @@
             :class="activeTab === 'logs' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
             <div 
-              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 dark:bg-brand-lime rounded-r-md transition-all duration-300 hidden md:block"
               :class="activeTab === 'logs' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
             ></div>
             <div 
               class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
-              :class="activeTab === 'logs' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+              :class="activeTab === 'logs' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 dark:border-brand-lime/30 shadow-[0_0_12px_rgba(29,78,216,0.15)] dark:shadow-[0_0_12px_rgba(50,205,50,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
             >
               <i class="fa-solid fa-file-lines text-base md:text-lg"></i>
             </div>
@@ -505,12 +506,12 @@
             :class="activeTab === 'groups' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
             <div 
-              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 dark:bg-brand-lime rounded-r-md transition-all duration-300 hidden md:block"
               :class="activeTab === 'groups' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
             ></div>
             <div 
               class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
-              :class="activeTab === 'groups' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+              :class="activeTab === 'groups' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 dark:border-brand-lime/30 shadow-[0_0_12px_rgba(29,78,216,0.15)] dark:shadow-[0_0_12px_rgba(50,205,50,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
             >
               <i class="fa-solid fa-desktop text-base md:text-lg"></i>
             </div>
@@ -527,12 +528,12 @@
             :class="activeTab === 'parental' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
             <div 
-              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 dark:bg-brand-lime rounded-r-md transition-all duration-300 hidden md:block"
               :class="activeTab === 'parental' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
             ></div>
             <div 
               class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
-              :class="activeTab === 'parental' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+              :class="activeTab === 'parental' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 dark:border-brand-lime/30 shadow-[0_0_12px_rgba(29,78,216,0.15)] dark:shadow-[0_0_12px_rgba(50,205,50,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
             >
               <i class="fa-solid fa-user-lock text-base md:text-lg"></i>
             </div>
@@ -549,12 +550,12 @@
             :class="activeTab === 'settings' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
             <div 
-              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 dark:bg-brand-lime rounded-r-md transition-all duration-300 hidden md:block"
               :class="activeTab === 'settings' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
             ></div>
             <div 
               class="relative flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
-              :class="activeTab === 'settings' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+              :class="activeTab === 'settings' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 dark:border-brand-lime/30 shadow-[0_0_12px_rgba(29,78,216,0.15)] dark:shadow-[0_0_12px_rgba(50,205,50,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
             >
               <i class="fa-solid fa-gear text-base md:text-lg"></i>
               <!-- Desktop Update Badge -->
@@ -576,12 +577,12 @@
             :class="activeTab === 'guide' ? 'text-lime-600 dark:text-lime-400 font-bold' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
           >
             <div 
-              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 rounded-r-md transition-all duration-300 hidden md:block"
+              class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-lime-500 dark:bg-brand-lime rounded-r-md transition-all duration-300 hidden md:block"
               :class="activeTab === 'guide' ? 'opacity-100 h-1/2' : 'opacity-0 h-0 group-hover:opacity-50 group-hover:h-1/3'"
             ></div>
             <div 
               class="flex items-center justify-center rounded-xl transition-all duration-300 w-9 h-9 md:w-12 md:h-12 border border-transparent"
-              :class="activeTab === 'guide' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 shadow-[0_0_12px_rgba(141,233,0,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
+              :class="activeTab === 'guide' ? 'bg-lime-500/10 border-lime-500/30 text-lime-600 dark:text-lime-400 dark:border-brand-lime/30 shadow-[0_0_12px_rgba(29,78,216,0.15)] dark:shadow-[0_0_12px_rgba(50,205,50,0.15)]' : 'group-hover:bg-slate-200/50 dark:group-hover:bg-neutral-800/50'"
             >
               <i class="fa-solid fa-circle-question text-base md:text-lg"></i>
             </div>
@@ -675,14 +676,14 @@
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(300)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-750 transition">Pause 5m</button>
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(1800)" class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold rounded-xl border border-neutral-750 transition">Pause 30m</button>
             <button x-show="!pauseStatus.disabled" @click="pauseBlocking(-1)" class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold rounded-xl border border-red-500/20 transition">Pause Indefinitely</button>
-            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-lime-400 dark:hover:bg-lime-500 dark:text-neutral-950 text-xs font-bold rounded-xl transition border border-lime-600 dark:border-lime-400 shadow-md shadow-lime-500/10 dark:shadow-lime-400/5">Resume Blocking Now</button>
+            <button x-show="pauseStatus.disabled" @click="resumeBlocking()" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-lime-400 dark:hover:bg-lime-500 dark:text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-xs font-bold rounded-xl transition border border-lime-600 dark:border-lime-400 shadow-md shadow-lime-500/10 dark:shadow-lime-400/5">Resume Blocking Now</button>
           </div>
         </div>
 
         <!-- Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <!-- Total Queries Card -->
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(29,78,216,0.05)] dark:hover:shadow-[0_0_15px_rgba(50,205,50,0.05)] transition-all duration-300">
             <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">Total Queries</div>
             <div class="text-3xl font-extrabold mt-2 dark:text-white" x-text="stats.summary.total_queries.toLocaleString()">0</div>
             <div class="flex items-center justify-between mt-4">
@@ -697,7 +698,7 @@
           </div>
 
           <!-- Queries Blocked Card -->
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(29,78,216,0.05)] dark:hover:shadow-[0_0_15px_rgba(50,205,50,0.05)] transition-all duration-300">
             <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">Queries Blocked</div>
             <div class="text-3xl font-extrabold mt-2 text-lime-650 dark:text-lime-400" x-text="stats.summary.blocked_queries.toLocaleString()">0</div>
             <div class="flex items-center justify-between mt-4">
@@ -712,7 +713,7 @@
           </div>
 
           <!-- Percentage Blocked Card -->
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-850 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(29,78,216,0.05)] dark:hover:shadow-[0_0_15px_rgba(50,205,50,0.05)] transition-all duration-300">
             <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">Percentage Blocked</div>
             <div class="flex items-center justify-between mt-2">
               <div>
@@ -734,15 +735,15 @@
           </div>
 
           <!-- DNS Cache Size Card -->
-          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-855 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(141,233,0,0.05)] transition-all duration-300">
+          <div class="bg-slate-50 dark:bg-darkcard border border-slate-200/80 dark:border-neutral-855 p-6 rounded-2xl shadow-sm hover:shadow-[0_0_15px_rgba(29,78,216,0.05)] dark:hover:shadow-[0_0_15px_rgba(50,205,50,0.05)] transition-all duration-300">
             <div class="text-slate-500 dark:text-neutral-400 text-2xs font-extrabold uppercase tracking-wider">DNS Cache Size</div>
-            <div class="text-3xl font-extrabold mt-2 text-blue-600 dark:text-blue-400" x-text="stats.system.dns_cache_size">0</div>
+            <div class="text-3xl font-extrabold mt-2 text-blue-600 dark:text-lime-400" x-text="stats.system.dns_cache_size">0</div>
             <div class="flex items-center justify-between mt-4">
               <span class="text-2xs font-semibold text-slate-500 dark:text-neutral-400 flex items-center">
                 <i class="fa-solid fa-bolt mr-1 text-3xs text-yellow-500 animate-pulse"></i>Fast Resolution
               </span>
               <span class="text-2xs font-bold text-slate-500 dark:text-neutral-400 flex items-center bg-slate-200/50 dark:bg-neutral-800/50 px-2 py-0.5 rounded-md">
-                <i class="fa-solid fa-server mr-1 text-3xs text-blue-500"></i>Local Cache
+                <i class="fa-solid fa-server mr-1 text-3xs text-blue-500 dark:text-lime-400"></i>Local Cache
               </span>
             </div>
           </div>
@@ -779,7 +780,7 @@
               <template x-for="d in stats.top_allowed" :key="d.domain">
                 <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 dark:border-neutral-800 last:border-0">
                   <span class="truncate font-semibold dark:text-neutral-200" :title="d.domain" x-text="d.domain"></span>
-                  <span class="px-2 py-0.5 rounded bg-lime-100 dark:bg-lime-950/40 text-lime-600 dark:text-lime-400 font-bold" x-text="d.count font-bold"></span>
+                  <span class="px-2 py-0.5 rounded bg-lime-100 dark:bg-brand-lime/10 text-lime-600 dark:text-lime-400 font-bold" x-text="d.count font-bold"></span>
                 </div>
               </template>
               <div x-show="stats.top_allowed.length === 0" class="text-center py-6 text-gray-600 dark:text-neutral-400 text-sm">No domains allowed.</div>
@@ -819,13 +820,13 @@
               type="text" 
               x-model="logSearch" 
               @input.debounce.300ms="loadLogs()"
-              class="px-4 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl w-64 focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" 
+              class="px-4 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl w-64 focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" 
               placeholder="Search domain or client..."
             >
             <select 
               x-model="logStatusFilter" 
               @change="loadLogs()"
-              class="px-4 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-slate-900 dark:text-white"
+              class="px-4 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-slate-900 dark:text-white"
             >
               <option value="">All Statuses</option>
               <option value="Blocked">Blocked Only</option>
@@ -835,7 +836,7 @@
           
           <div class="flex items-center space-x-4 text-sm font-semibold">
             <label class="flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" x-model="logAutoPoll" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500">
+              <input type="checkbox" x-model="logAutoPoll" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 dark:text-[#32cd32] focus:ring-lime-500 dark:focus:ring-brand-lime dark:focus:ring-[#32cd32]">
               <span class="text-gray-700 dark:text-neutral-300">Live Polling</span>
             </label>
             <button 
@@ -879,7 +880,7 @@
                         :class="log.status.startsWith('Blocked') 
                           ? 'bg-red-500/10 text-red-500 border-red-500/20' 
                           : log.status.includes('Whitelist')
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20'
                             : 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-500/20'"
                         x-text="log.status"
                       ></span>
@@ -906,7 +907,7 @@
           <!-- Create Group Button trigger -->
           <button 
             @click="openCreateGroup()" 
-            class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center gap-2 transition"
+            class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl flex items-center gap-2 transition"
           >
             <i class="fa-solid fa-plus"></i> Create Group
           </button>
@@ -1004,9 +1005,9 @@
               
               <!-- Client Form -->
               <form @submit.prevent="addClient()" class="flex flex-col sm:flex-row gap-3">
-                <input type="text" x-model="newClientIp" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 dark:text-white" placeholder="IP or CIDR (e.g. 192.168.1.5)" required>
-                <input type="text" x-model="newClientName" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 dark:text-white" placeholder="Client Name (e.g. iPad)">
-                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-sm font-bold rounded-xl transition">Add Client</button>
+                <input type="text" x-model="newClientIp" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none placeholder-gray-500 dark:text-white" placeholder="IP or CIDR (e.g. 192.168.1.5)" required>
+                <input type="text" x-model="newClientName" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none placeholder-gray-500 dark:text-white" placeholder="Client Name (e.g. iPad)">
+                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-sm font-bold rounded-xl transition">Add Client</button>
               </form>
 
               <!-- Clients list -->
@@ -1036,7 +1037,7 @@
                   <input 
                     type="text" 
                     x-model="adlistSearch" 
-                    class="px-3 py-1.5 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white w-48"
+                    class="px-3 py-1.5 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white w-48"
                     placeholder="Search blocklists..."
                   >
                 </div>
@@ -1045,9 +1046,9 @@
 
               <!-- Add Blocklist Form -->
               <form @submit.prevent="addAdlist()" class="flex flex-col sm:flex-row gap-3">
-                <input type="text" x-model="newAdlistName" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Blocklist Name (e.g. EasyList)" required>
-                <input type="url" x-model="newAdlistUrl" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="https://domain.com/hosts.txt" required>
-                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-sm font-bold rounded-xl transition">Add List</button>
+                <input type="text" x-model="newAdlistName" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Blocklist Name (e.g. EasyList)" required>
+                <input type="url" x-model="newAdlistUrl" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="https://domain.com/hosts.txt" required>
+                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-sm font-bold rounded-xl transition">Add List</button>
               </form>
 
               <!-- Adlists list -->
@@ -1111,7 +1112,7 @@
                           <span class="text-4xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" 
                                 :class="{
                                   'bg-red-500/10 text-red-600 dark:text-red-400': item.category === 'Security',
-                                  'bg-blue-500/10 text-blue-600 dark:text-blue-400': item.category === 'Privacy',
+                                  'bg-blue-500/10 text-blue-600 dark:bg-lime-400/10 dark:text-lime-400': item.category === 'Privacy',
                                   'bg-lime-500/10 text-lime-600 dark:text-lime-400': item.category === 'Ads',
                                   'bg-purple-500/10 text-purple-650 dark:text-purple-400': item.category === 'Telemetry'
                                 }"
@@ -1190,7 +1191,7 @@
                   <input 
                     type="text" 
                     x-model="ruleSearch" 
-                    class="px-3 py-1.5 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white w-48"
+                    class="px-3 py-1.5 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white w-48"
                     placeholder="Search custom rules..."
                   >
                 </div>
@@ -1200,18 +1201,18 @@
               <!-- Add Custom Rule Form -->
               <form @submit.prevent="addRule()" class="flex flex-col gap-3">
                 <div class="flex flex-col sm:flex-row gap-3">
-                  <input type="text" x-model="newRuleDomain" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Domain or RegEx (e.g. *.ad.com or ^ad\.)" required>
-                  <select x-model="newRuleType" class="px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-slate-900 dark:text-white">
+                  <input type="text" x-model="newRuleDomain" class="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Domain or RegEx (e.g. *.ad.com or ^ad\.)" required>
+                  <select x-model="newRuleType" class="px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-slate-900 dark:text-white">
                     <option value="deny">Blacklist (Block)</option>
                     <option value="allow">Whitelist (Allow)</option>
                   </select>
                 </div>
                 <div class="flex items-center justify-between gap-3">
                   <label class="flex items-center space-x-2 text-xs text-gray-655 dark:text-neutral-400 cursor-pointer">
-                    <input type="checkbox" x-model="newRuleIsRegex" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500">
+                    <input type="checkbox" x-model="newRuleIsRegex" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 dark:text-[#32cd32] focus:ring-lime-500 dark:focus:ring-brand-lime dark:focus:ring-[#32cd32]">
                     <span>RegEx / Wildcard Rule</span>
                   </label>
-                  <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-sm font-bold rounded-xl transition">Add Rule</button>
+                  <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-sm font-bold rounded-xl transition">Add Rule</button>
                 </div>
               </form>
 
@@ -1224,7 +1225,7 @@
                       <span x-show="r.is_regex" class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-450 text-3xs font-bold uppercase">REGEX</span>
                       <span 
                         class="px-1.5 py-0.5 rounded text-3xs font-bold uppercase"
-                        :class="r.type === 'allow' ? 'bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400' : 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400'"
+                        :class="r.type === 'allow' ? 'bg-lime-100 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400' : 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400'"
                         x-text="r.type === 'allow' ? 'ALLOW' : 'BLOCK'"
                       ></span>
                       <button @click="deleteRule(r.id)" class="p-2 text-gray-655 hover:text-red-500 transition" title="Delete custom rule"><i class="fa-solid fa-xmark"></i></button>
@@ -1252,11 +1253,11 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Group Name</label>
-                  <input type="text" x-model="newGroupName" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white placeholder-gray-500" placeholder="Kids Devices" required>
+                  <input type="text" x-model="newGroupName" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white placeholder-gray-500" placeholder="Kids Devices" required>
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Description</label>
-                  <textarea x-model="newGroupDesc" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white placeholder-gray-500" rows="1" placeholder="Strict blocklist for kids devices..."></textarea>
+                  <textarea x-model="newGroupDesc" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white placeholder-gray-500" rows="1" placeholder="Strict blocklist for kids devices..."></textarea>
                 </div>
               </div>
 
@@ -1271,7 +1272,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <template x-for="l in defaultListsToSelect" :key="l.url">
                         <label class="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-neutral-300 p-2 hover:bg-slate-50 dark:hover:bg-neutral-800/40 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-100 dark:hover:border-neutral-800">
-                          <input type="checkbox" x-model="l.checked" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500 mt-0.5">
+                          <input type="checkbox" x-model="l.checked" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 dark:text-[#32cd32] focus:ring-lime-500 dark:focus:ring-brand-lime dark:focus:ring-[#32cd32] mt-0.5">
                           <div class="min-w-0 flex-1">
                             <div class="font-semibold truncate" x-text="l.name" :title="l.name"></div>
                             <div class="text-3xs text-gray-500 dark:text-neutral-400 truncate" x-text="l.url" :title="l.url"></div>
@@ -1287,7 +1288,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <template x-for="l in customListsToSelect" :key="l.url">
                         <label class="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-neutral-300 p-2 hover:bg-slate-50 dark:hover:bg-neutral-800/40 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-100 dark:hover:border-neutral-800">
-                          <input type="checkbox" x-model="l.checked" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 focus:ring-lime-500 mt-0.5">
+                          <input type="checkbox" x-model="l.checked" class="rounded border-gray-300 dark:border-neutral-700 text-lime-500 dark:text-[#32cd32] focus:ring-lime-500 dark:focus:ring-brand-lime dark:focus:ring-[#32cd32] mt-0.5">
                           <div class="min-w-0 flex-1">
                             <div class="font-semibold truncate" x-text="l.name" :title="l.name"></div>
                             <div class="text-3xs text-gray-500 dark:text-neutral-400 truncate" x-text="l.url" :title="l.url"></div>
@@ -1301,7 +1302,7 @@
 
               <div class="flex items-center justify-end space-x-2 pt-2 border-t border-gray-100 dark:border-neutral-800">
                 <button type="button" @click="showCreateGroupModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-white text-xs font-bold rounded-xl transition">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition">Create Group</button>
+                <button type="submit" class="px-4 py-2 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-xs font-bold rounded-xl transition">Create Group</button>
               </div>
             </form>
           </div>
@@ -1396,7 +1397,7 @@
                 <span>A new version of ZeroSink is available!</span>
               </div>
 
-              <div x-show="!updateAvailable && latestVersion" class="p-3 bg-lime-500/10 border border-lime-500/20 text-lime-600 dark:text-lime-400 rounded-xl text-xs flex items-center gap-2" x-cloak>
+              <div x-show="!updateAvailable && latestVersion" class="p-3 bg-lime-500/10 border border-lime-500/20 dark:bg-brand-lime/10 dark:border-brand-lime/20 text-lime-600 dark:text-lime-400 rounded-xl text-xs flex items-center gap-2" x-cloak>
                 <i class="fa-solid fa-circle-check text-base"></i>
                 <span>ZeroSink is up to date.</span>
               </div>
@@ -1436,7 +1437,7 @@
                 <template x-if="stats.system && !stats.system.is_docker">
                   <button 
                     @click="installUpdate()" 
-                    class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+                    class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
                   >
                     <i class="fa-solid fa-circle-arrow-up"></i> Install Update Automatically
                   </button>
@@ -1474,7 +1475,7 @@
                   >
                   <button 
                     @click="document.getElementById('importFileInput').click()" 
-                    class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 transition"
+                    class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl flex items-center justify-center gap-2 transition"
                     :disabled="importing"
                   >
                     <span x-show="importing" class="animate-spin"><i class="fa-solid fa-spinner"></i></span>
@@ -1498,17 +1499,17 @@
                 <textarea 
                   x-model="upstreamDns" 
                   rows="3" 
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono"
+                  class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono"
                   placeholder="e.g. 1.1.1.1, 8.8.8.8"
                   required
                 ></textarea>
                 <p class="text-2xs text-gray-600 dark:text-neutral-400 mt-1">Queries are sent to all configured servers in parallel for maximum speed and redundancy. Supports IPv4 and IPv6 addresses.</p>
               </div>
               
-              <div x-show="upstreamDnsMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="upstreamDnsMessage"></div>
+              <div x-show="upstreamDnsMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 dark:bg-brand-lime/10 dark:border-brand-lime/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="upstreamDnsMessage"></div>
               <div x-show="upstreamDnsError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="upstreamDnsError"></div>
               
-              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition">Save Upstream DNS</button>
+              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl transition">Save Upstream DNS</button>
             </form>
           </div>
 
@@ -1522,7 +1523,7 @@
               <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Current Password</label>
                 <div class="relative">
-                  <input :type="showOldPassword ? 'text' : 'password'" x-model="passwordOld" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                  <input :type="showOldPassword ? 'text' : 'password'" x-model="passwordOld" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white" required>
                   <button type="button" @click="showOldPassword = !showOldPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
                     <i class="fa-solid" :class="showOldPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                   </button>
@@ -1531,7 +1532,7 @@
               <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">New Password</label>
                 <div class="relative">
-                  <input :type="showNewPassword ? 'text' : 'password'" x-model="passwordNew" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                  <input :type="showNewPassword ? 'text' : 'password'" x-model="passwordNew" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white" required>
                   <button type="button" @click="showNewPassword = !showNewPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
                     <i class="fa-solid" :class="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                   </button>
@@ -1540,17 +1541,17 @@
               <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Confirm New Password</label>
                 <div class="relative">
-                  <input :type="showConfirmPassword ? 'text' : 'password'" x-model="passwordConfirm" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                  <input :type="showConfirmPassword ? 'text' : 'password'" x-model="passwordConfirm" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white" required>
                   <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
                     <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                   </button>
                 </div>
               </div>
               
-              <div x-show="passwordMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="passwordMessage"></div>
+              <div x-show="passwordMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 dark:bg-brand-lime/10 dark:border-brand-lime/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="passwordMessage"></div>
               <div x-show="passwordError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="passwordError"></div>
               
-              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition">Update Password</button>
+              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl transition">Update Password</button>
             </form>
           </div>
 
@@ -1572,7 +1573,7 @@
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Confirm Password</label>
                   <div class="relative">
-                    <input :type="showDisable2faPassword ? 'text' : 'password'" x-model="disable2faPassword" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                    <input :type="showDisable2faPassword ? 'text' : 'password'" x-model="disable2faPassword" class="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white" required>
                     <button type="button" @click="showDisable2faPassword = !showDisable2faPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-500 hover:text-neutral-300">
                       <i class="fa-solid" :class="showDisable2faPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                     </button>
@@ -1587,7 +1588,7 @@
             <div x-show="!totpEnabled" class="space-y-4">
               <div x-show="!showTotpSetup" class="space-y-4">
                 <p class="text-xs text-gray-600 dark:text-neutral-400">Add an extra layer of security to your admin account by requiring a 6-digit verification code from your mobile authenticator app (e.g. Google Authenticator, Microsoft Authenticator, Authy) at login.</p>
-                <button @click="start2faSetup()" class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 transition">
+                <button @click="start2faSetup()" class="w-full py-3 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl flex items-center justify-center gap-2 transition">
                   <i class="fa-solid fa-qrcode"></i> Setup 2FA
                 </button>
               </div>
@@ -1608,12 +1609,12 @@
                 <form @submit.prevent="confirm2faEnable()" class="space-y-3 pt-2">
                   <div>
                     <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Confirm 6-Digit Code</label>
-                    <input type="text" x-model="totpConfirmCode" placeholder="000000" maxlength="6" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white text-center tracking-widest font-bold" required>
+                    <input type="text" x-model="totpConfirmCode" placeholder="000000" maxlength="6" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white text-center tracking-widest font-bold" required>
                   </div>
                   <div x-show="totpError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="totpError"></div>
                   <div class="flex gap-2">
                     <button type="button" @click="showTotpSetup = false; totpError = '';" class="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-white text-xs font-bold rounded-xl transition">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-xl transition">Verify & Enable</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-xs font-bold rounded-xl transition">Verify & Enable</button>
                   </div>
                 </form>
               </div>
@@ -1629,7 +1630,7 @@
             <form @submit.prevent="updatePrivacySettings()" class="space-y-4">
               <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Logging Privacy Level</label>
-                <select x-model="privacyMode" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white">
+                <select x-model="privacyMode" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white">
                   <option value="0">Full Logging (Logs client IP, name, and domain)</option>
                   <option value="1">Stealth Logging (Masks query domain names in database)</option>
                   <option value="2">Anonymized Logging (Masks client IP and client names)</option>
@@ -1638,10 +1639,10 @@
               </div>
               <div>
                 <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Log Retention (Days)</label>
-                <input type="number" x-model="logRetentionDays" min="1" max="365" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white" required>
+                <input type="number" x-model="logRetentionDays" min="1" max="365" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white" required>
                 <p class="text-2xs text-gray-500 dark:text-neutral-400 mt-1">Logs older than this will be automatically pruned to protect SD card storage.</p>
               </div>
-              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition">Save Privacy Settings</button>
+              <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl transition">Save Privacy Settings</button>
             </form>
           </div>
 
@@ -1654,13 +1655,13 @@
             </h3>
             
             <form @submit.prevent="addLocalDns()" class="flex flex-col sm:flex-row gap-2">
-              <input type="text" x-model="newLocalDnsDomain" class="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Domain (e.g. nas.home)" required>
-              <input type="text" x-model="newLocalDnsIp" class="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="IP Address (e.g. 192.168.1.10)" required>
-              <select x-model="newLocalDnsType" class="px-2 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-lg focus:outline-none text-slate-900 dark:text-white">
+              <input type="text" x-model="newLocalDnsDomain" class="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="Domain (e.g. nas.home)" required>
+              <input type="text" x-model="newLocalDnsIp" class="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-lg focus:outline-none placeholder-gray-500 text-slate-900 dark:text-white" placeholder="IP Address (e.g. 192.168.1.10)" required>
+              <select x-model="newLocalDnsType" class="px-2 py-2 text-xs bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-lg focus:outline-none text-slate-900 dark:text-white">
                 <option value="A">A</option>
                 <option value="AAAA">AAAA</option>
               </select>
-              <button type="submit" class="py-2 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 text-xs font-bold rounded-lg transition">Add</button>
+              <button type="submit" class="py-2 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold text-xs font-bold rounded-lg transition">Add</button>
             </form>
             
             <div class="space-y-2 max-h-60 overflow-y-auto pt-2">
@@ -1686,7 +1687,7 @@
               
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" x-model="dhcpEnabled" class="sr-only peer">
-                <div class="w-9 h-5 bg-neutral-200 dark:bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 peer-checked:after:bg-neutral-950"></div>
+                <div class="w-9 h-5 bg-neutral-200 dark:bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime peer-checked:after:bg-neutral-950"></div>
               </label>
             </div>
             
@@ -1695,37 +1696,37 @@
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">IP Pool Range Start</label>
-                    <input type="text" x-model="dhcpRangeStart" placeholder="e.g. 192.168.1.150" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                    <input type="text" x-model="dhcpRangeStart" placeholder="e.g. 192.168.1.150" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">IP Pool Range End</label>
-                    <input type="text" x-model="dhcpRangeEnd" placeholder="e.g. 192.168.1.200" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                    <input type="text" x-model="dhcpRangeEnd" placeholder="e.g. 192.168.1.200" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
                   </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Gateway (Router) IP</label>
-                    <input type="text" x-model="dhcpRouter" placeholder="Leave blank for server IP" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" :disabled="!dhcpEnabled">
+                    <input type="text" x-model="dhcpRouter" placeholder="Leave blank for server IP" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono" :disabled="!dhcpEnabled">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Subnet Mask</label>
-                    <input type="text" x-model="dhcpSubnetMask" placeholder="255.255.255.0" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                    <input type="text" x-model="dhcpSubnetMask" placeholder="255.255.255.0" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
                   </div>
                 </div>
                 
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Lease Time (Seconds)</label>
-                  <input type="number" x-model="dhcpLeaseTime" min="60" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
+                  <input type="number" x-model="dhcpLeaseTime" min="60" class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono" required :disabled="!dhcpEnabled">
                 </div>
                 
-                <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold rounded-xl transition" :disabled="!dhcpEnabled">Save DHCP Configuration</button>
+                <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl transition" :disabled="!dhcpEnabled">Save DHCP Configuration</button>
               </form>
               
               <div class="space-y-3">
                 <h4 class="font-bold text-xs border-b border-gray-100 dark:border-neutral-800 pb-2 dark:text-white flex justify-between items-center">
                   <span>Active DHCP Leases</span>
-                  <button type="button" @click="loadDhcpLeases()" class="text-3xs text-lime-500 hover:underline"><i class="fa-solid fa-sync"></i> Refresh Leases</button>
+                  <button type="button" @click="loadDhcpLeases()" class="text-3xs text-lime-600 dark:text-lime-400 hover:underline"><i class="fa-solid fa-sync"></i> Refresh Leases</button>
                 </h4>
                 
                 <div class="space-y-2 max-h-72 overflow-y-auto pt-1">
@@ -1783,13 +1784,13 @@
             </div>
             
             <div class="md:w-1/3 w-full bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-2xl flex flex-col justify-center space-y-4">
-              <a href="https://zerosink.lemonsqueezy.com/checkout/buy/addon_parental" target="_blank" class="w-full text-center bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold py-3 px-4 rounded-xl transition duration-150 shadow-lg">
+              <a href="https://zerosink.lemonsqueezy.com/checkout/buy/addon_parental" target="_blank" class="w-full text-center bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold py-3 px-4 rounded-xl transition duration-150 shadow-lg">
                 Subscribe Now
               </a>
               <div class="border-t border-slate-200 dark:border-neutral-800 my-2"></div>
               <div class="space-y-2">
                 <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wider block mb-1">Have a License Key?</label>
-                <input type="text" x-model="premiumLicenseKey" placeholder="Pasted key or 'sandbox'" class="w-full bg-white dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-2 focus:ring-lime-500">
+                <input type="text" x-model="premiumLicenseKey" placeholder="Pasted key or 'sandbox'" class="w-full bg-white dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-2 focus:ring-lime-500 dark:focus:ring-brand-lime">
                 <button @click="activatePremium()" class="w-full bg-slate-800 dark:bg-neutral-800 border border-slate-700 dark:border-neutral-700 hover:bg-slate-700 dark:hover:bg-neutral-700 text-white font-bold py-2 rounded-xl text-2xs transition duration-150">
                   Activate License
                 </button>
@@ -1864,7 +1865,7 @@
                 <!-- Group selector -->
                 <div class="flex items-center space-x-2">
                   <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase">Group:</label>
-                  <select x-model="selectedParentalGroupId" @change="loadGroupAppBlocks(selectedParentalGroupId)" class="bg-slate-100 dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700 text-slate-950 dark:text-white text-2xs rounded-xl px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-lime-500">
+                  <select x-model="selectedParentalGroupId" @change="loadGroupAppBlocks(selectedParentalGroupId)" class="bg-slate-100 dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700 text-slate-950 dark:text-white text-2xs rounded-xl px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-lime-500 dark:focus:ring-brand-lime">
                     <template x-for="g in parentalGroups" :key="g.id">
                       <option :value="g.id" x-text="g.name"></option>
                     </template>
@@ -1879,12 +1880,12 @@
                 <div class="space-y-3 bg-slate-50 dark:bg-neutral-800/40 p-4 rounded-xl border border-slate-200 dark:border-neutral-800/80">
                   <div class="flex items-center justify-between">
                     <span class="text-2xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 flex items-center gap-2">
-                      <i class="fa-solid fa-users text-blue-500 dark:text-blue-400"></i> Social Media
+                      <i class="fa-solid fa-users text-blue-500 dark:text-lime-400"></i> Social Media
                     </span>
                     <!-- Master block -->
                     <label class="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" :checked="parentalAppBlocks['social'] && parentalAppBlocks['social']['all']" @change="toggleAppBlock('social', 'all', $event.target.checked)" class="sr-only peer">
-                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                       <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
                     </label>
                   </div>
@@ -1894,7 +1895,7 @@
                         <span x-text="app.charAt(0).toUpperCase() + app.slice(1)"></span>
                         <label class="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" :disabled="parentalAppBlocks['social'] && parentalAppBlocks['social']['all']" :checked="parentalAppBlocks['social'] && (parentalAppBlocks['social']['all'] || parentalAppBlocks['social'][app])" @change="toggleAppBlock('social', app, $event.target.checked)" class="sr-only peer">
-                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500"></div>
+                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                         </label>
                       </div>
                     </template>
@@ -1909,7 +1910,7 @@
                     </span>
                     <label class="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" :checked="parentalAppBlocks['gaming'] && parentalAppBlocks['gaming']['all']" @change="toggleAppBlock('gaming', 'all', $event.target.checked)" class="sr-only peer">
-                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                       <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
                     </label>
                   </div>
@@ -1919,7 +1920,7 @@
                         <span x-text="app.charAt(0).toUpperCase() + app.slice(1)"></span>
                         <label class="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" :disabled="parentalAppBlocks['gaming'] && parentalAppBlocks['gaming']['all']" :checked="parentalAppBlocks['gaming'] && (parentalAppBlocks['gaming']['all'] || parentalAppBlocks['gaming'][app])" @change="toggleAppBlock('gaming', app, $event.target.checked)" class="sr-only peer">
-                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500"></div>
+                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                         </label>
                       </div>
                     </template>
@@ -1934,7 +1935,7 @@
                     </span>
                     <label class="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" :checked="parentalAppBlocks['entertainment'] && parentalAppBlocks['entertainment']['all']" @change="toggleAppBlock('entertainment', 'all', $event.target.checked)" class="sr-only peer">
-                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                      <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                       <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
                     </label>
                   </div>
@@ -1944,7 +1945,7 @@
                         <span x-text="app.charAt(0).toUpperCase() + app.slice(1)"></span>
                         <label class="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" :disabled="parentalAppBlocks['entertainment'] && parentalAppBlocks['entertainment']['all']" :checked="parentalAppBlocks['entertainment'] && (parentalAppBlocks['entertainment']['all'] || parentalAppBlocks['entertainment'][app])" @change="toggleAppBlock('entertainment', app, $event.target.checked)" class="sr-only peer">
-                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500"></div>
+                          <div class="w-8 h-4 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                         </label>
                       </div>
                     </template>
@@ -1958,7 +1959,7 @@
                   </span>
                   <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" :checked="parentalAppBlocks['adult'] && parentalAppBlocks['adult']['all']" @change="toggleAppBlock('adult', 'all', $event.target.checked)" class="sr-only peer">
-                    <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500"></div>
+                    <div class="w-9 h-5 bg-slate-300 dark:bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-lime-500 dark:peer-checked:bg-brand-lime"></div>
                     <span class="text-3xs font-bold text-slate-500 dark:text-neutral-400 ml-2">Block All</span>
                   </label>
                 </div>
@@ -1975,7 +1976,7 @@
                   </h3>
                   <p class="text-3xs text-slate-500 dark:text-neutral-400 mt-0.5">Enforce blockout periods by day and category.</p>
                 </div>
-                <button @click="newDowntimeGroupId = parentalGroups.length > 0 ? parentalGroups[0].id : ''; showCreateDowntimeModal = true" class="bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold py-1.5 px-3 rounded-xl text-3xs transition duration-150">
+                <button @click="newDowntimeGroupId = parentalGroups.length > 0 ? parentalGroups[0].id : ''; showCreateDowntimeModal = true" class="bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold py-1.5 px-3 rounded-xl text-3xs transition duration-150">
                   + Add New
                 </button>
               </div>
@@ -1987,7 +1988,7 @@
                     <div class="space-y-1">
                       <div class="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
                         <span x-text="s.name"></span>
-                        <span class="px-1.5 py-0.5 rounded bg-lime-500/10 text-lime-700 dark:text-lime-400 text-4xs font-semibold uppercase tracking-wider" x-text="s.group_name"></span>
+                        <span class="px-1.5 py-0.5 rounded bg-lime-500/10 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400 text-4xs font-semibold uppercase tracking-wider" x-text="s.group_name"></span>
                       </div>
                       <div class="text-2xs font-mono text-slate-600 dark:text-neutral-400">
                         <i class="fa-solid fa-clock mr-1 text-slate-400 dark:text-neutral-500"></i>
@@ -2029,13 +2030,13 @@
               <!-- Name -->
               <div>
                 <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">Schedule Name</label>
-                <input type="text" x-model="newDowntimeName" placeholder="e.g. Bedtime, School Hours" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                <input type="text" x-model="newDowntimeName" placeholder="e.g. Bedtime, School Hours" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500 dark:focus:ring-brand-lime">
               </div>
 
               <!-- Group Selector -->
               <div>
                 <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">Target Client Group</label>
-                <select x-model="newDowntimeGroupId" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-950 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                <select x-model="newDowntimeGroupId" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-950 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500 dark:focus:ring-brand-lime">
                   <template x-for="g in parentalGroups" :key="g.id">
                     <option :value="g.id" x-text="g.name"></option>
                   </template>
@@ -2046,11 +2047,11 @@
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">Start Time (24h)</label>
-                  <input type="time" x-model="newDowntimeStart" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                  <input type="time" x-model="newDowntimeStart" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500 dark:focus:ring-brand-lime">
                 </div>
                 <div>
                   <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1">End Time (24h)</label>
-                  <input type="time" x-model="newDowntimeEnd" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500">
+                  <input type="time" x-model="newDowntimeEnd" class="w-full bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-white border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:ring-1 focus:ring-lime-500 dark:focus:ring-brand-lime">
                 </div>
               </div>
 
@@ -2074,7 +2075,7 @@
                 <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wide block mb-1.5">What to block during this period?</label>
                 <div class="space-y-2">
                   <div class="flex items-center gap-2">
-                    <input type="checkbox" id="blockAllInternet" :checked="newDowntimeCategories.length === 0" @change="if ($event.target.checked) newDowntimeCategories = []" class="rounded bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-lime-500 focus:ring-0">
+                    <input type="checkbox" id="blockAllInternet" :checked="newDowntimeCategories.length === 0" @change="if ($event.target.checked) newDowntimeCategories = []" class="rounded bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-lime-500 dark:text-[#32cd32] focus:ring-0">
                     <label for="blockAllInternet" class="text-2xs font-semibold text-slate-800 dark:text-neutral-300">🚫 Entire Internet (Total Block)</label>
                   </div>
                   
@@ -2082,7 +2083,7 @@
                   
                   <template x-for="cat in ['social', 'gaming', 'entertainment', 'adult']">
                     <div class="flex items-center gap-2 pl-4">
-                      <input type="checkbox" :disabled="newDowntimeCategories.length === 0" :checked="newDowntimeCategories.includes(cat)" @change="$event.target.checked ? newDowntimeCategories.push(cat) : newDowntimeCategories = newDowntimeCategories.filter(c => c !== cat)" class="rounded bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-lime-500 focus:ring-0">
+                      <input type="checkbox" :disabled="newDowntimeCategories.length === 0" :checked="newDowntimeCategories.includes(cat)" @change="$event.target.checked ? newDowntimeCategories.push(cat) : newDowntimeCategories = newDowntimeCategories.filter(c => c !== cat)" class="rounded bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-lime-500 dark:text-[#32cd32] focus:ring-0">
                       <span class="text-2xs text-slate-500 dark:text-neutral-400 capitalize" x-text="'Block ' + cat"></span>
                     </div>
                   </template>
@@ -2094,7 +2095,7 @@
               <button @click="showCreateDowntimeModal = false" class="bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-white font-semibold py-2 px-4 rounded-xl text-3xs transition duration-150">
                 Cancel
               </button>
-              <button @click="createDowntimeSchedule()" class="bg-lime-500 hover:bg-lime-600 text-neutral-950 font-bold py-2 px-4 rounded-xl text-3xs transition duration-150">
+              <button @click="createDowntimeSchedule()" class="bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold py-2 px-4 rounded-xl text-3xs transition duration-150">
                 Save Schedule
               </button>
             </div>
@@ -2137,7 +2138,7 @@
               <li>Log in to your router's admin panel (typically at <code class="bg-neutral-200 dark:bg-neutral-800 px-1 rounded">192.168.1.1</code> or <code class="bg-neutral-200 dark:bg-neutral-800 px-1 rounded">192.168.0.1</code>).</li>
               <li>Navigate to **WAN Settings**, **LAN Settings**, or **DHCP Settings**.</li>
               <li>Locate the **DNS Server** configuration section.</li>
-              <li>Set the Primary DNS Server IP to: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Set the Primary DNS Server IP to: <code class="bg-lime-100 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
               <li>Save changes and restart your router or re-connect your devices to the Wi-Fi.</li>
             </ol>
           </div>
@@ -2151,7 +2152,7 @@
               <li>Open **Settings** > **Network &amp; internet** > **Wi-Fi** or **Ethernet**.</li>
               <li>Click on the name of your active connection.</li>
               <li>Scroll down to **DNS server assignment** and click **Edit**.</li>
-              <li>Select **Manual**, toggle IPv4 **On**, and enter: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Select **Manual**, toggle IPv4 **On**, and enter: <code class="bg-lime-100 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
               <li>Save settings. Open command prompt and run <code class="bg-neutral-200 dark:bg-neutral-800 px-1 rounded">ipconfig /flushdns</code>.</li>
             </ol>
           </div>
@@ -2165,7 +2166,7 @@
               <li>Go to **System Settings** > **Network**.</li>
               <li>Select your active connection (Wi-Fi or Ethernet) and click **Details...**</li>
               <li>Select the **DNS** tab in the sidebar.</li>
-              <li>Under DNS Servers, click the **+** button and enter: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Under DNS Servers, click the **+** button and enter: <code class="bg-lime-100 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
               <li>Click **OK** and then **Apply** to save.</li>
             </ol>
           </div>
@@ -2180,7 +2181,7 @@
               <li>Open your device's Wi-Fi Settings and tap the **Info (i)** or gear icon next to your network.</li>
               <li>Look for the **DNS** configuration option (often set to Automatic).</li>
               <li>Switch it to **Manual**.</li>
-              <li>Delete existing servers and add: <code class="bg-lime-100 text-lime-700 dark:bg-lime-950/40 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
+              <li>Delete existing servers and add: <code class="bg-lime-100 text-lime-700 dark:bg-brand-lime/10 dark:text-lime-400 font-bold px-1.5 py-0.5 rounded font-mono" x-text="stats.system.local_ip"></code>.</li>
               <li>Save settings.</li>
             </ol>
           </div>
@@ -3485,11 +3486,11 @@
           gradientTotal.addColorStop(1, 'rgba(100, 116, 139, 0)');
 
           const gradientBlocked = chartCtx.createLinearGradient(0, 0, 0, 250);
-          gradientBlocked.addColorStop(0, isDark ? 'rgba(141, 233, 0, 0.22)' : 'rgba(29, 78, 216, 0.15)');
-          gradientBlocked.addColorStop(1, 'rgba(141, 233, 0, 0)');
+          gradientBlocked.addColorStop(0, isDark ? 'rgba(50, 205, 50, 0.22)' : 'rgba(29, 78, 216, 0.15)');
+          gradientBlocked.addColorStop(1, 'rgba(50, 205, 50, 0)');
           
           const totalBorderColor = isDark ? '#64748b' : '#94a3b8';
-          const blockedBorderColor = isDark ? '#8deb00' : '#1d4ed8';
+          const blockedBorderColor = isDark ? '#32cd32' : '#1d4ed8';
 
           // Update the chart if it already exists, otherwise create a new one.
           // This avoids constant destruction/recreation which causes render loops and visual flickering.
