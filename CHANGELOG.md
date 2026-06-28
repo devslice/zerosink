@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.13] - 2026-06-28
+
+### Changed
+- **Login Form Architecture:** Refactored login form to preserve native browser DOM actions, submit event tracking hooks, and state events to establish full synchronization with Zoho Vault auto-login and programmatic TOTP injection — added `action`/`method` for form detection, replaced `x-show`/`x-cloak` with `:class` toggle, reverted TOTP to `type="text"` with `inputmode="numeric"`, and added value-property interceptor for `x-model` event propagation.
+
 ## [1.0.12] - 2026-06-28
 
 ### Changed

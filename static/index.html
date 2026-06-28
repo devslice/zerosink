@@ -136,7 +136,7 @@
  </div>
 
  <!-- Unified Login Form -->
- <form @submit.prevent="require2fa ? verify2fa() : login()" class="space-y-6">
+ <form action="/api/auth/login" method="post" @submit="handleLoginSubmit($event)" class="space-y-6">
  <!-- Step 1: Password Login -->
  <div x-show="!require2fa" class="space-y-6">
  <div>
@@ -191,7 +191,7 @@
  </div>
 
  <!-- Step 2: 2FA Verification -->
- <div x-show="require2fa" class="space-y-6" x-cloak>
+ <div :class="require2fa ? '' : 'hidden'" class="space-y-6">
  <div>
  <label class="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">Two-Factor Authenticator Code</label>
  <div class="relative">
@@ -199,11 +199,10 @@
  <i class="lni lni-key-1"></i>
  </span>
    <input 
-   type="number"
-   min="000000"
-   max="999999"
+   type="text"
    id="totp"
    name="token"
+   inputmode="numeric"
    x-model="login2faCode"
    class="form-control w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-brandgreen focus:ring-1 focus:ring-brandgreen rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-600 text-center tracking-[0.5em] text-lg focus:outline-none transition" 
    placeholder="123456"
@@ -2442,10 +2441,42 @@
  if (this.token && this.pauseStatus.disabled && this.pauseStatus.remaining_seconds > 0) {
  this.pauseStatus.remaining_seconds--;
  }
- }, 1000);
- },
+  }, 1000);
 
- toggleTheme() {
+  // Intercept programmatic value changes on TOTP input
+  // so Zoho Vault injections propagate to x-model
+  this.$nextTick(() => {
+    const totpInput = document.getElementById('totp');
+    if (totpInput) {
+      const proto = HTMLInputElement.prototype;
+      const valueDesc = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (valueDesc && valueDesc.configurable) {
+        Object.defineProperty(totpInput, 'value', {
+          get() { return valueDesc.get.call(this); },
+          set(newVal) {
+            valueDesc.set.call(this, newVal);
+            this.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+      }
+    }
+  });
+  },
+
+  handleLoginSubmit($event) {
+  // Read TOTP value directly from DOM element
+  // so Zoho programmatic injection is captured even without DOM events
+  if (this.require2fa) {
+    const totpEl = document.getElementById('totp');
+    if (totpEl && totpEl.value) {
+      this.login2faCode = totpEl.value;
+    }
+  }
+  $event.preventDefault();
+  this.require2fa ? this.verify2fa() : this.login();
+  },
+
+  toggleTheme() {
  this.theme = this.theme === 'dark' ? 'light' : 'dark';
  },
 
