@@ -1626,9 +1626,14 @@ def verify_stripe_subscription(subscription_id: str) -> dict:
     url = f"{ZEROSINK_LICENSING_URL}?sub_id={clean_id}"
     req = urllib.request.Request(url, method="GET")
     req.add_header("Accept", "application/json")
+    req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    
+    import ssl
+    import urllib.error
+    context = ssl._create_unverified_context()
     
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, context=context, timeout=10) as response:
             res_body = response.read()
             return json.loads(res_body.decode("utf-8"))
     except urllib.error.HTTPError as e:

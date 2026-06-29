@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.6] - 2026-06-29
+
+### Fixed
+- **Cloudflare WAF Block Fix**: Added a standard browser User-Agent header and unverified SSL context to the Stripe subscription verification requests in the backend, resolving `403 Forbidden` errors triggered by Cloudflare's bot-detection (Error 1010) on default `urllib` signatures.
+
 ## [1.0.5] - 2026-06-29
 
 ### Added
