@@ -88,6 +88,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.exception("Failed to start mDNS responder")
         
+    import threading
+    threading.Thread(target=auto_update_worker, daemon=True).start()
+    logger.info("Started automatic update daemon thread.")
+    
     yield
     
     # Shutdown mDNS responder
@@ -1295,6 +1299,68 @@ async def trigger_update(req: UpdateRequest, current_user: dict = Depends(get_cu
     threading.Thread(target=perform_system_update, args=(req.version, DB_PATH), daemon=True).start()
     
     return {"status": "success", "message": "System update initiated successfully."}
+
+
+
+def auto_update_worker():
+    """Background worker that periodically checks for updates and installs them."""
+    import time
+    import urllib.request
+    import json
+    import re
+    import os
+    from backend.config import DB_PATH, VERSION
+    
+    # Wait 5 minutes after startup to let system stabilize and finish booting
+    time.sleep(300)
+    
+    while True:
+        try:
+            # Skip auto-update if running in docker
+            if os.path.exists('/.dockerenv'):
+                logger.info("Automatic updates are disabled inside a Docker container.")
+                time.sleep(86400)
+                continue
+                
+            logger.info("Checking for system updates on GitHub...")
+            url = "https://api.github.com/repos/devslice/zerosink/releases/latest"
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'ZeroSink-Updater'}
+            )
+            import ssl
+            context = ssl._create_unverified_context()
+            
+            with urllib.request.urlopen(req, context=context) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                
+            tag_name = data.get("tag_name", "")
+            if tag_name:
+                latest_version = tag_name.replace("v", "")
+                
+                def version_to_tuple(v):
+                    parts = []
+                    for x in re.findall(r'\d+', v):
+                        try:
+                            parts.append(int(x))
+                        except ValueError:
+                            pass
+                    return tuple(parts)
+                
+                current_tuple = version_to_tuple(VERSION)
+                latest_tuple = version_to_tuple(latest_version)
+                
+                if latest_tuple > current_tuple:
+                    logger.info(f"New update found: {latest_version} (current: {VERSION}). Starting automatic installation...")
+                    perform_system_update(latest_version, DB_PATH)
+                else:
+                    logger.info(f"ZeroSink is up-to-date (current: {VERSION}, latest: {latest_version}).")
+                    
+        except Exception as e:
+            logger.error(f"Error in auto_update_worker: {str(e)}", exc_info=True)
+            
+        # Sleep for 24 hours before checking again
+        time.sleep(86400)
 
 
 # --- Settings Management Endpoints ---

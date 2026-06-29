@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.3] - 2026-06-29
+
+### Added
+- **Fully Automatic Updates**: Added a background daemon thread that queries GitHub for new releases every 24 hours and automatically installs updates (pulling files, running pip dependencies, and running DB migrations) before restarting.
+- **PWA Auto-Cache Buster**: Integrated version checking in the frontend UI. If the browser holds a cached PWA version of `index.html` that mismatches the running backend version, it automatically unregisters service workers, purges caches, and reloads the page to keep the client interface synchronized with the backend.
+
 ## [1.0.2] - 2026-06-29
 
 ### Changed

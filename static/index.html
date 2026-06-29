@@ -2385,7 +2385,8 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- premiumActive: false,
+ FRONTEND_VERSION: '1.0.3',
+premiumActive: false,
  premiumLicenseKey: '',
  premiumExpiresAt: '',
  premiumCustomerPortal: '',
@@ -2775,6 +2776,31 @@
  currentVersion = statsData.system.version;
  }
  const currentClean = currentVersion.replace(/^v/, '');
+
+  // Check for frontend PWA cache mismatch against backend version
+  if (currentClean && currentClean !== this.FRONTEND_VERSION) {
+      console.log("UI version mismatch: Frontend " + this.FRONTEND_VERSION + " vs Backend " + currentClean + ". Reloading cache...");
+      if (navigator.serviceWorker) {
+          try {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              for (let r of registrations) {
+                  await r.unregister();
+              }
+          } catch (e) { console.error(e); }
+      }
+      if (window.caches) {
+          try {
+              const keys = await caches.keys();
+              for (let k of keys) {
+                  await caches.delete(k);
+              }
+          } catch (e) { console.error(e); }
+      }
+      setTimeout(() => {
+          window.location.reload(true);
+      }, 300);
+      return;
+  }
 
  // Compare semantic versions (major.minor.patch)
  const latestParts = latestClean.split('.').map(Number);
