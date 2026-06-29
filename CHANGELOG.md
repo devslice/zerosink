@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.2] - 2026-06-29
+
+### Changed
+- **Stripe Checkout Link & JS Bug Fix**: Resolved a frontend runtime ReferenceError by correctly declaring `premiumCheckoutUrl` in the AlpineJS state variables, updating status loaders, and adding a static HTML fallback `href` for the Subscribe button to guarantee reliable checkout transitions.
+
 ## [1.0.1] - 2026-06-28
 
 ### Changed
