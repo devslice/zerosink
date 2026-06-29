@@ -25,9 +25,11 @@ DEFAULT_ADMIN_USER = os.environ.get("ZEROSINK_ADMIN_USER", "admin")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ZEROSINK_ADMIN_PASSWORD", "zerosink")
 
 # Application Version
-VERSION = "1.0.6"
+VERSION = "1.0.7"
 
 # Stripe Settings
 ZEROSINK_LICENSING_URL = os.environ.get("ZEROSINK_LICENSING_URL", "https://zerosink-licensing.ant-90c.workers.dev/verify")
 STRIPE_CHECKOUT_URL = os.environ.get("STRIPE_CHECKOUT_URL", "https://buy.stripe.com/test_aFa00lfaT7ZYgTm5LufMA00")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")  # Set via environment variable on the Pi
+STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "price_1TnMpcP4p1ovWS4ZUV3Aphkv")
 

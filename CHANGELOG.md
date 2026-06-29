@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.7] - 2026-06-29
+
+### Fixed
+- **Python Scoping Bug**: Fixed `UnboundLocalError: cannot access local variable 'urllib'` in `verify_stripe_subscription` caused by importing `urllib.error` after the variable was already referenced. All imports moved to the top of the function using aliased names.
+- **Stripe Redirect to Login Fix**: Replaced the static Stripe Payment Link with a dynamic Checkout Session created via the Stripe API. The backend now generates a real session with `success_url=http://zerosink.local/?session_id={CHECKOUT_SESSION_ID}`, ensuring Stripe redirects users back to the dashboard (not to login) with the session ID embedded for automatic activation.
+
 ## [1.0.6] - 2026-06-29
 
 ### Fixed

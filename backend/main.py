@@ -6,7 +6,7 @@ import asyncio
 import socket
 from contextlib import asynccontextmanager
 from typing import Optional
-from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Query
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Query, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -1606,6 +1606,9 @@ import socket
 from datetime import datetime, timedelta
 
 def verify_stripe_subscription(subscription_id: str) -> dict:
+    import ssl as _ssl
+    import urllib.request as _urllib_request
+    import urllib.error as _urllib_error
     from backend.config import ZEROSINK_LICENSING_URL
     
     clean_id = subscription_id.strip()
@@ -1624,19 +1627,16 @@ def verify_stripe_subscription(subscription_id: str) -> dict:
         return {"activated": False, "error": "Licensing server URL not configured."}
 
     url = f"{ZEROSINK_LICENSING_URL}?sub_id={clean_id}"
-    req = urllib.request.Request(url, method="GET")
+    req = _urllib_request.Request(url, method="GET")
     req.add_header("Accept", "application/json")
     req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    
-    import ssl
-    import urllib.error
-    context = ssl._create_unverified_context()
+    context = _ssl._create_unverified_context()
     
     try:
-        with urllib.request.urlopen(req, context=context, timeout=10) as response:
+        with _urllib_request.urlopen(req, context=context, timeout=10) as response:
             res_body = response.read()
             return json.loads(res_body.decode("utf-8"))
-    except urllib.error.HTTPError as e:
+    except _urllib_error.HTTPError as e:
         try:
             res_body = e.read()
             return json.loads(res_body.decode("utf-8"))
@@ -1644,6 +1644,52 @@ def verify_stripe_subscription(subscription_id: str) -> dict:
             return {"activated": False, "error": f"Licensing server HTTP Error: {e.code}"}
     except Exception as e:
         return {"activated": False, "error": f"Failed to connect to licensing server: {str(e)}"}
+
+@app.get("/api/premium/create-checkout-session")
+async def create_checkout_session(request: Request, current_user: dict = Depends(get_current_user)):
+    """Creates a dynamic Stripe Checkout Session with success_url pointing back to this dashboard."""
+    import ssl as _ssl
+    import urllib.request as _urllib_request
+    import urllib.parse as _urllib_parse
+    import urllib.error as _urllib_error
+    from backend.config import STRIPE_PRICE_ID, STRIPE_SECRET_KEY
+    
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Stripe secret key not configured on server.")
+    
+    # Build success URL pointing back to the dashboard with session ID appended
+    base_url = str(request.base_url).rstrip("/")
+    success_url = f"{base_url}/?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{base_url}/"
+    
+    post_data = _urllib_parse.urlencode({
+        "mode": "subscription",
+        "line_items[0][price]": STRIPE_PRICE_ID,
+        "line_items[0][quantity]": "1",
+        "success_url": success_url,
+        "cancel_url": cancel_url,
+    }).encode("utf-8")
+    
+    req = _urllib_request.Request("https://api.stripe.com/v1/checkout/sessions", data=post_data, method="POST")
+    req.add_header("Authorization", f"Bearer {STRIPE_SECRET_KEY}")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    
+    context = _ssl._create_unverified_context()
+    try:
+        with _urllib_request.urlopen(req, context=context, timeout=15) as response:
+            session = json.loads(response.read().decode("utf-8"))
+        return {"checkout_url": session["url"]}
+    except _urllib_error.HTTPError as e:
+        try:
+            err = json.loads(e.read().decode("utf-8"))
+            raise HTTPException(status_code=e.code, detail=err.get("error", {}).get("message", f"Stripe error {e.code}"))
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(status_code=e.code, detail=f"Stripe error: {e.code}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create checkout session: {str(e)}")
+
 
 @app.get("/api/premium/status")
 async def get_premium_status(current_user: dict = Depends(get_current_user)):

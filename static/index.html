@@ -1850,9 +1850,10 @@
  </div>
  
  <div class="md:w-2/5 w-full bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-6 rounded-2xl flex flex-col justify-center space-y-4">
- <a href="https://buy.stripe.com/test_aFa00lfaT7ZYgTm5LufMA00" :href="premiumCheckoutUrl || 'https://buy.stripe.com/test_aFa00lfaT7ZYgTm5LufMA00'" target="_blank" class="w-full text-center bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold py-3 px-4 rounded-xl transition duration-150 shadow-lg">
- Subscribe Now
- </a>
+ <button @click="startCheckout()" :disabled="checkoutLoading" class="w-full text-center bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold py-3 px-4 rounded-xl transition duration-150 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+ <span x-show="checkoutLoading"><i class="mdi mdi-loading mdi-spin"></i></span>
+ <span x-text="checkoutLoading ? 'Preparing checkout...' : 'Subscribe Now'">Subscribe Now</span>
+ </button>
  <div class="border-t border-slate-200 dark:border-neutral-800 my-2"></div>
  <div class="space-y-2">
  <label class="text-3xs font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wider block mb-1">Have a Stripe Subscription ID?</label>
@@ -2411,8 +2412,9 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- FRONTEND_VERSION: '1.0.6',
+ FRONTEND_VERSION: '1.0.7',
 premiumResolving: false,
+  checkoutLoading: false,
 premiumActive: false,
  premiumLicenseKey: '',
  premiumExpiresAt: '',
@@ -2781,7 +2783,24 @@ premiumActive: false,
   this.checkStripeCheckoutRedirect();
  },
 
-   async checkStripeCheckoutRedirect() {
+   async startCheckout() {
+      this.checkoutLoading = true;
+      try {
+          const resp = await this.fetchApi('/api/premium/create-checkout-session');
+          const data = await resp.json();
+          if (data.checkout_url) {
+              window.location.href = data.checkout_url;
+          } else {
+              this.showToastMessage('Failed to start checkout. Please try again.', 'error');
+          }
+      } catch (e) {
+          this.showToastMessage('Checkout error: ' + e.message, 'error');
+      } finally {
+          this.checkoutLoading = false;
+      }
+  },
+
+  async checkStripeCheckoutRedirect() {
       const urlParams = new URLSearchParams(window.location.search);
       const sessionId = urlParams.get('session_id');
       if (sessionId && sessionId.startsWith('cs_')) {
