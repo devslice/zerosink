@@ -1476,6 +1476,17 @@
  <span class="text-gray-600 dark:text-neutral-400 block text-xs font-bold uppercase tracking-wider mb-2">Release Notes (v<span x-text="latestVersion"></span>)</span>
  <div class="bg-gray-50 dark:bg-neutral-950 p-3 rounded-xl border border-gray-200 dark:border-neutral-800 max-h-48 overflow-y-auto text-2xs text-gray-700 dark:text-neutral-300 font-mono whitespace-pre-wrap leading-relaxed select-text" x-text="latestChangelog"></div>
  </div>
+  <!-- Check for Updates Button -->
+  <div x-show="!updateAvailable && !updating" class="pt-2" x-cloak>
+  <button 
+  @click="manualCheckForUpdates()" 
+  class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-800 dark:text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition text-xs border border-slate-200 dark:border-neutral-700"
+  >
+  <i class="mdi mdi-refresh"></i> Check for Updates
+  </button>
+  </div>
+
+  
 
  <!-- Action Controls -->
  <div x-show="updateAvailable && !updating" class="pt-2" x-cloak>
@@ -2400,7 +2411,7 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- FRONTEND_VERSION: '1.0.4',
+ FRONTEND_VERSION: '1.0.5',
 premiumResolving: false,
 premiumActive: false,
  premiumLicenseKey: '',
@@ -2802,6 +2813,16 @@ premiumActive: false,
           } finally {
               this.premiumResolving = false;
           }
+      }
+  },
+
+    async manualCheckForUpdates() {
+      this.showToastMessage("Checking for updates...", "info");
+      await this.checkForUpdates();
+      if (this.updateAvailable) {
+          this.showToastMessage("A new update is available: v" + this.latestVersion, "success");
+      } else {
+          this.showToastMessage("ZeroSink is up to date!", "success");
       }
   },
 

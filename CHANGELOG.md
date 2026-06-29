@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.5] - 2026-06-29
+
+### Added
+- **Manual Update Check Button**: Added a "Check for Updates" button to the Software Update settings card, allowing users to manually force a GitHub update verification request at any time and get real-time toast feedback.
+
 ## [1.0.4] - 2026-06-29
 
 ### Added
