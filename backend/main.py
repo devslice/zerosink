@@ -209,6 +209,9 @@ class DHCPSettingsUpdate(BaseModel):
 class PremiumLicenseRequest(BaseModel):
     license_key: str
 
+class ResolveSessionRequest(BaseModel):
+    session_id: str
+
 class DowntimeScheduleCreate(BaseModel):
     group_id: int
     name: str
@@ -1706,6 +1709,74 @@ async def deactivate_premium(current_user: dict = Depends(get_current_user)):
     from backend.dns_engine import reload_premium_cache
     reload_premium_cache()
     return {"status": "success", "message": "Premium deactivated successfully."}
+
+@app.post("/api/premium/resolve-session")
+async def resolve_premium_session(req: ResolveSessionRequest, current_user: dict = Depends(get_current_user)):
+    """Resolve a Stripe Checkout Session ID to get the Subscription ID and activate premium."""
+    import urllib.request
+    import json
+    import ssl
+    import urllib.error
+    
+    session_id = req.session_id.strip()
+    if not session_id.startswith("cs_"):
+        raise HTTPException(status_code=400, detail="Invalid checkout session ID format.")
+        
+    from backend.config import ZEROSINK_LICENSING_URL
+    # Replace '/verify' with '/resolve' to hit the resolve endpoint on the worker
+    resolve_url = ZEROSINK_LICENSING_URL.replace("/verify", "/resolve") + f"?session_id={session_id}"
+    
+    try:
+        req_worker = urllib.request.Request(
+            resolve_url,
+            headers={'User-Agent': 'ZeroSink-Backend'}
+        )
+        context = ssl._create_unverified_context()
+        
+        with urllib.request.urlopen(req_worker, context=context) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            
+        sub_id = res_data.get("subscription_id")
+        if not sub_id:
+            raise HTTPException(status_code=404, detail="Subscription ID not found in session resolution response.")
+            
+        # Verify the subscription status using verify_stripe_subscription
+        res = verify_stripe_subscription(sub_id)
+        if not res.get("activated"):
+            error_msg = res.get("error") or "Invalid subscription or activation failed."
+            raise HTTPException(status_code=400, detail=error_msg)
+            
+        expires_at = res.get("expires_at")
+        sub_status = res.get("status", "active")
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_key', ?)", (sub_id,))
+        cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_status', ?)", ("active" if sub_status == "active" else "inactive",))
+        cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('premium_license_expires_at', ?)", (expires_at,))
+        conn.commit()
+        conn.close()
+        
+        from backend.dns_engine import reload_premium_cache
+        reload_premium_cache()
+        
+        return {
+            "status": "success",
+            "message": "Premium activated automatically via Checkout Session!",
+            "subscription_id": sub_id,
+            "expires_at": expires_at
+        }
+        
+    except urllib.error.HTTPError as e:
+        try:
+            err_msg = json.loads(e.read().decode("utf-8")).get("error", f"Stripe proxy error: {e.code}")
+        except Exception:
+            err_msg = f"Stripe proxy error: {e.code}"
+        raise HTTPException(status_code=e.code, detail=err_msg)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to resolve checkout session: {str(e)}")
 
 # --- Downtime Schedules Endpoints ---
 

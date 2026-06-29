@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.4] - 2026-06-29
+
+### Added
+- **Automatic License Activation**: Implemented automatic resolution and activation of premium licenses via Stripe Checkout Session IDs (`cs_...`). When redirected back to the dashboard, the app automatically verifies the checkout session, extracts the subscription ID, saves the license, and unlocks premium features instantly without manual copy-pasting.
+
 ## [1.0.3] - 2026-06-29
 
 ### Added
