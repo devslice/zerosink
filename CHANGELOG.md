@@ -2,6 +2,11 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.8] - 2026-06-29
+
+### Changed
+- **Subscribe Now reverted to Payment Link**: Reverted the Subscribe Now button back to a simple Stripe Payment Link. Since the Payment Link is already configured in the Stripe Dashboard to redirect to `http://zerosink.local/?session_id={CHECKOUT_SESSION_ID}`, no dynamic session creation or Stripe secret key on the Pi is required. The dynamic `/api/premium/create-checkout-session` endpoint remains available as an alternative.
+
 ## [1.0.7] - 2026-06-29
 
 ### Fixed
