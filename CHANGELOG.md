@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.3.0] - 2026-06-30
+
+### Added
+
+- **Themed confirmation modal**: Replaced all native `confirm()` dialogs with a custom modal styled to match the app's light/dark theme. The modal features a contextual icon (alert circle for dangerous actions, help circle for neutral), a lime-green confirm button for safe actions, and a red confirm button for destructive actions (delete, deactivate, restore). Covers Upgrade ZeroSink, Delete Group, Release DHCP Lease, Restore Configuration, Deactivate Premium, and Delete Downtime Schedule.
+
 ## [1.2.2] - 2026-06-30
 
 ### Changed

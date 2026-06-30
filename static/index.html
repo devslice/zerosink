@@ -2481,8 +2481,11 @@
  compiling: false,
  importing: false,
  
- // Toast
- toast: { show: false, message: '', type: 'success' },
+  // Toast
+  toast: { show: false, message: '', type: 'success' },
+  
+  // Confirm Modal
+  confirmModal: { show: false, title: '', message: '', confirmText: 'Confirm', cancelText: 'Cancel', danger: false, onConfirm: null },
  
  // New Features State
  pauseStatus: { disabled: false, remaining_seconds: 0, blocking_disabled_until: 0.0 },
@@ -2513,7 +2516,7 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- FRONTEND_VERSION: '1.2.2',
+ FRONTEND_VERSION: '1.3.0',
 premiumResolving: false,
   checkoutLoading: false,
 premiumActive: false,
@@ -3064,10 +3067,24 @@ premiumActive: false,
  }
  },
 
- async installUpdate() {
- if (!confirm(`Are you sure you want to upgrade ZeroSink to version v${this.latestVersion}?`)) {
- return;
- }
+ openConfirmModal(opts) {
+  this.confirmModal = {
+  show: true,
+  title: opts.title || 'Confirm',
+  message: opts.message || 'Are you sure?',
+  confirmText: opts.confirmText || 'Confirm',
+  cancelText: opts.cancelText || 'Cancel',
+  danger: opts.danger || false,
+  onConfirm: opts.onConfirm || null,
+  };
+  },
+
+  async installUpdate() {
+  this.openConfirmModal({
+  title: 'Upgrade ZeroSink',
+  message: `Are you sure you want to upgrade to version v${this.latestVersion}?`,
+  confirmText: 'Upgrade',
+  onConfirm: async () => {
  this.updating = true;
  this.updateMessage = 'Initiating update process...';
  this.updateError = '';
@@ -3118,14 +3135,16 @@ premiumActive: false,
  window.location.reload();
  }
  } catch (err) {
- // Still offline, wait
- }
- }, 2000);
- }, 6000);
- }
- },
+  // Still offline, wait
+  }
+  }, 2000);
+  }, 6000);
+  }
+  },
+  });
+  },
 
- async check2faStatus() {
+  async check2faStatus() {
  if (!this.token) return;
  try {
  const resp = await this.fetchApi('/api/auth/status');
@@ -3315,19 +3334,27 @@ premiumActive: false,
  }
  },
 
- async deleteGroup(id) {
- if (!confirm("Are you sure you want to delete this group? All clients and list mappings will be deleted.")) return;
- try {
- await this.fetchApi(`/api/groups/${id}`, { method: 'DELETE' });
- this.showToastMessage("Group deleted.");
- if (this.selectedGroupId === id) {
- this.selectedGroupId = 1;
- }
- await this.loadGroups();
- } catch (e) {
- this.showToastMessage(e.message, "error");
- }
- },
+  async deleteGroup(id) {
+  this.openConfirmModal({
+  title: 'Delete Group',
+  message: 'Are you sure you want to delete this group? All clients and list mappings will be deleted.',
+  confirmText: 'Delete',
+  danger: true,
+  onConfirm: async () => {
+  this.confirmModal.show = false;
+  try {
+  await this.fetchApi(`/api/groups/${id}`, { method: 'DELETE' });
+  this.showToastMessage("Group deleted.");
+  if (this.selectedGroupId === id) {
+  this.selectedGroupId = 1;
+  }
+  await this.loadGroups();
+  } catch (e) {
+  this.showToastMessage(e.message, "error");
+  }
+  },
+  });
+  },
 
  async addClient() {
  if (!this.newClientIp) return;
@@ -3648,16 +3675,24 @@ premiumActive: false,
  }
  },
 
- async releaseLease(mac) {
- if (!confirm("Are you sure you want to release this DHCP lease?")) return;
- try {
- await this.fetchApi(`/api/dhcp/leases/${mac}`, { method: 'DELETE' });
- this.showToastMessage("DHCP lease released.");
- await this.loadDhcpLeases();
- } catch (e) {
- this.showToastMessage(e.message, "error");
- }
- },
+  async releaseLease(mac) {
+  this.openConfirmModal({
+  title: 'Release DHCP Lease',
+  message: 'Are you sure you want to release this DHCP lease?',
+  confirmText: 'Release',
+  danger: true,
+  onConfirm: async () => {
+  this.confirmModal.show = false;
+  try {
+  await this.fetchApi(`/api/dhcp/leases/${mac}`, { method: 'DELETE' });
+  this.showToastMessage("DHCP lease released.");
+  await this.loadDhcpLeases();
+  } catch (e) {
+  this.showToastMessage(e.message, "error");
+  }
+  },
+  });
+  },
 
  formatTimestamp(timestampStr) {
  try {
@@ -3778,16 +3813,18 @@ premiumActive: false,
  }
  },
 
- async importConfig(event) {
- const file = event.target.files[0];
- if (!file) return;
- 
- if (!confirm("Are you sure you want to restore configuration? This will overwrite all current groups, clients, adlists, and rules!")) {
- event.target.value = '';
- return;
- }
- 
- this.importing = true;
+  async importConfig(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  this.openConfirmModal({
+  title: 'Restore Configuration',
+  message: 'Are you sure you want to restore configuration? This will overwrite all current groups, clients, adlists, and rules!',
+  confirmText: 'Restore',
+  danger: true,
+  onConfirm: async () => {
+  this.confirmModal.show = false;
+  this.importing = true;
  const formData = new FormData();
  formData.append('file', file);
  
@@ -3803,11 +3840,13 @@ premiumActive: false,
  } catch (e) {
  this.showToastMessage("Restore failed: " + e.message, "error");
  } finally {
- this.importing = false;
- }
- },
+  this.importing = false;
+  }
+  },
+  });
+  },
 
- // Helper Formatters
+  // Helper Formatters
  formatDate(isoStr) {
  try {
  const date = new Date(isoStr);
@@ -3980,21 +4019,29 @@ premiumActive: false,
  }
  },
 
- async deactivatePremium() {
- if (!confirm("Are you sure you want to deactivate Premium Parental Controls on this server?")) return;
- try {
- const resp = await this.fetchApi('/api/premium/deactivate', { method: 'POST' });
- const data = await resp.json();
- this.showToastMessage(data.message);
- this.premiumActive = false;
- this.premiumLicenseKey = '';
- this.premiumExpiresAt = '';
- this.premiumCustomerPortal = '';
-	this.premiumCheckoutUrl = '';
-	} catch (e) {
- this.showToastMessage("Failed deactivating premium: " + e.message, "error");
- }
- },
+  async deactivatePremium() {
+  this.openConfirmModal({
+  title: 'Deactivate Premium',
+  message: 'Are you sure you want to deactivate Premium Parental Controls on this server?',
+  confirmText: 'Deactivate',
+  danger: true,
+  onConfirm: async () => {
+  this.confirmModal.show = false;
+  try {
+  const resp = await this.fetchApi('/api/premium/deactivate', { method: 'POST' });
+  const data = await resp.json();
+  this.showToastMessage(data.message);
+  this.premiumActive = false;
+  this.premiumLicenseKey = '';
+  this.premiumExpiresAt = '';
+  this.premiumCustomerPortal = '';
+ 	this.premiumCheckoutUrl = '';
+ 	} catch (e) {
+  this.showToastMessage("Failed deactivating premium: " + e.message, "error");
+  }
+  },
+  });
+  },
 
  async loadParentalGroups() {
  try {
@@ -4083,18 +4130,48 @@ premiumActive: false,
  }
  },
 
- async deleteDowntimeSchedule(id) {
- if (!confirm("Are you sure you want to delete this downtime schedule?")) return;
- try {
- await this.fetchApi(`/api/premium/downtimes/${id}`, { method: 'DELETE' });
- this.showToastMessage("Downtime schedule deleted.");
- await this.loadDowntimeSchedules();
- } catch (e) {
- this.showToastMessage("Failed deleting schedule: " + e.message, "error");
+  async deleteDowntimeSchedule(id) {
+  this.openConfirmModal({
+  title: 'Delete Schedule',
+  message: 'Are you sure you want to delete this downtime schedule?',
+  confirmText: 'Delete',
+  danger: true,
+  onConfirm: async () => {
+  this.confirmModal.show = false;
+  try {
+  await this.fetchApi(`/api/premium/downtimes/${id}`, { method: 'DELETE' });
+  this.showToastMessage("Downtime schedule deleted.");
+  await this.loadDowntimeSchedules();
+  } catch (e) {
+  this.showToastMessage("Failed deleting schedule: " + e.message, "error");
+  }
+  },
+  });
+  }
  }
  }
- }
- }
- </script>
+
+</script>
+
+<!-- CONFIRM MODAL -->
+<div
+x-show="confirmModal.show"
+class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+x-cloak
+>
+<div class="w-full max-w-md p-6 bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 rounded-2xl shadow-2xl m-4 transition-all duration-300" @click.outside="confirmModal.show = false">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" :class="confirmModal.danger ? 'bg-red-100 dark:bg-red-900/30' : 'bg-lime-100 dark:bg-lime-900/30'">
+<i :class="confirmModal.danger ? 'mdi mdi-alert-circle text-red-500 dark:text-red-400 text-xl' : 'mdi mdi-help-circle text-lime-600 dark:text-lime-400 text-xl'"></i>
+</div>
+<h3 class="text-lg font-bold dark:text-white" x-text="confirmModal.title"></h3>
+</div>
+<p class="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed" x-text="confirmModal.message"></p>
+<div class="flex items-center justify-end space-x-2 pt-5">
+<button type="button" @click="confirmModal.show = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-white text-xs font-bold rounded-xl transition" x-text="confirmModal.cancelText || 'Cancel'"></button>
+<button type="button" @click="confirmModal.onConfirm ? confirmModal.onConfirm() : null" class="px-4 py-2 text-xs font-bold rounded-xl transition text-white" :class="confirmModal.danger ? 'bg-red-500 hover:bg-red-600' : 'bg-lime-500 hover:bg-lime-600 dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold'" x-text="confirmModal.confirmText || 'Confirm'"></button>
+</div>
+</div>
+</div>
 </body>
 </html>
