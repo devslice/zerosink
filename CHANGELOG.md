@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.3.1] - 2026-06-30
+
+### Changed
+
+- **Reworded backup/restore description in Settings**: Replaced the technical "streamable JSON backup" / "atomically" wording with plain English — "Download your full configuration… as a JSON file. You can restore it later to replace everything in one go."
+
 ## [1.3.0] - 2026-06-30
 
 ### Added
