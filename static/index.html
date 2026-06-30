@@ -1615,26 +1615,68 @@
  <!-- Upstream DNS Servers -->
  <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-neutral-800 p-6 rounded-2xl shadow-sm space-y-4">
  <h3 class="text-lg font-bold dark:text-white border-b border-gray-100 dark:border-neutral-800 pb-2">
- <i class="mdi mdi-earth mr-2 text-lime-700 dark:text-lime-400"></i>Upstream DNS Servers
+ <i class="mdi mdi-shield-lock mr-2 text-lime-700 dark:text-lime-400"></i>Upstream DNS Provider
  </h3>
- 
+
+ <p class="text-xs text-gray-500 dark:text-neutral-400">ZeroSink forwards allowed queries to your chosen upstream resolver over <strong>DNS-over-HTTPS (DoH)</strong> — encrypted on port 443, invisible to your ISP. Custom IP mode uses plain UDP/TCP (unencrypted).</p>
+
  <form @submit.prevent="updateSettings()" class="space-y-4">
- <div>
- <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300 mb-1">Upstream DNS Servers (Space or comma separated)</label>
- <textarea 
- x-model="upstreamDns" 
- rows="3" 
- class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono"
- placeholder="e.g. 1.1.1.1, 8.8.8.8"
- required
- ></textarea>
- <p class="text-2xs text-gray-600 dark:text-neutral-400 mt-1">Queries are sent to all configured servers in parallel for maximum speed and redundancy. Supports IPv4 and IPv6 addresses.</p>
+
+ <!-- Provider Cards Grid -->
+ <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+ <template x-for="provider in dnsProviders" :key="provider.key">
+ <button
+ type="button"
+ @click="upstreamDnsProvider = provider.key"
+ :class="upstreamDnsProvider === provider.key
+ ? 'border-lime-500 dark:border-[#32cd32] bg-lime-50 dark:bg-[#32cd32]/10 ring-1 ring-lime-400 dark:ring-[#32cd32]/40'
+ : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 hover:border-lime-400 dark:hover:border-[#32cd32]/50'"
+ class="relative flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer w-full"
+ >
+ <!-- Encrypted badge -->
+ <span
+ :class="provider.encrypted ? 'bg-lime-100 dark:bg-lime-900/40 text-lime-700 dark:text-lime-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'"
+ class="absolute top-2.5 right-2.5 text-2xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+ >
+ <i :class="provider.encrypted ? 'mdi mdi-lock' : 'mdi mdi-lock-open-variant'" class="text-xs"></i>
+ <span x-text="provider.encrypted ? 'Encrypted' : 'Unencrypted'"></span>
+ </span>
+ <!-- Icon + Name -->
+ <div class="flex items-center gap-2">
+ <i :class="'mdi ' + provider.icon" class="text-xl" :style="upstreamDnsProvider === provider.key ? 'color: #32cd32' : 'color: #9ca3af'"></i>
+ <span class="font-bold text-sm dark:text-white" x-text="provider.label"></span>
  </div>
- 
+ <!-- DoH URL -->
+ <span x-show="provider.doh_url" class="text-2xs font-mono text-gray-400 dark:text-neutral-500 truncate w-full" x-text="provider.doh_url"></span>
+ <!-- Description -->
+ <span class="text-2xs text-gray-500 dark:text-neutral-400 leading-relaxed" x-text="provider.description"></span>
+ <!-- Selected check -->
+ <div x-show="upstreamDnsProvider === provider.key" class="absolute bottom-2.5 right-2.5">
+ <i class="mdi mdi-check-circle text-lime-500 dark:text-[#32cd32] text-base"></i>
+ </div>
+ </button>
+ </template>
+ </div>
+
+ <!-- Custom IPs textarea — only shown when custom is selected -->
+ <div x-show="upstreamDnsProvider === 'custom'" x-transition class="space-y-2">
+ <label class="block text-xs font-semibold text-gray-700 dark:text-neutral-300">Custom DNS Server IPs <span class="font-normal text-gray-400">(space or comma separated)</span></label>
+ <textarea
+ x-model="upstreamDns"
+ rows="2"
+ class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 focus:border-lime-500 dark:focus:border-brand-lime rounded-xl focus:outline-none text-sm dark:text-white font-mono"
+ placeholder="e.g. 8.8.8.8, 8.8.4.4"
+ ></textarea>
+ <p class="text-2xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+ <i class="mdi mdi-alert-circle-outline"></i>
+ Custom IPs use plain unencrypted UDP/TCP — your ISP may see DNS queries.
+ </p>
+ </div>
+
  <div x-show="upstreamDnsMessage" class="p-3 rounded-lg bg-lime-500/10 border border-lime-500/20 dark:bg-brand-lime/10 dark:border-brand-lime/20 text-lime-700 dark:text-lime-400 text-xs font-semibold" x-text="upstreamDnsMessage"></div>
  <div x-show="upstreamDnsError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold" x-text="upstreamDnsError"></div>
- 
- <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl transition">Save Upstream DNS</button>
+
+ <button type="submit" class="py-2.5 px-4 bg-lime-500 hover:bg-lime-600 text-white dark:bg-[#32cd32] dark:hover:bg-[#32cd32]/90 dark:text-neutral-950 dark:font-bold font-bold rounded-xl transition">Save DNS Provider</button>
  </form>
  </div>
 
@@ -2428,6 +2470,8 @@
  upstreamDns: '',
  upstreamDnsMessage: '',
  upstreamDnsError: '',
+ upstreamDnsProvider: 'cloudflare',
+ dnsProviders: [],
  
  // Search & Filter
  logSearch: '',
@@ -2470,7 +2514,7 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- FRONTEND_VERSION: '1.0.9',
+ FRONTEND_VERSION: '1.1.0',
 premiumResolving: false,
   checkoutLoading: false,
 premiumActive: false,
@@ -3685,9 +3729,14 @@ premiumActive: false,
  this.upstreamDnsMessage = '';
  this.upstreamDnsError = '';
  try {
+ // Load provider list
+ const provResp = await this.fetchApi('/api/settings/dns-providers');
+ this.dnsProviders = await provResp.json();
+
  const resp = await this.fetchApi('/api/settings');
  const data = await resp.json();
  this.upstreamDns = data.upstream_dns || '';
+ this.upstreamDnsProvider = data.upstream_dns_provider || 'cloudflare';
  } catch (e) {
  this.upstreamDnsError = "Failed to load settings: " + e.message;
  }
@@ -3700,10 +3749,13 @@ premiumActive: false,
  await this.fetchApi('/api/settings', {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ upstream_dns: this.upstreamDns })
+ body: JSON.stringify({
+ upstream_dns: this.upstreamDns,
+ upstream_dns_provider: this.upstreamDnsProvider
+ })
  });
- this.upstreamDnsMessage = "Upstream DNS settings updated successfully.";
- this.showToastMessage("Upstream DNS updated.");
+ this.upstreamDnsMessage = "DNS provider updated successfully.";
+ this.showToastMessage("DNS provider updated.");
  } catch (e) {
  this.upstreamDnsError = e.message;
  }

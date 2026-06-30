@@ -7,7 +7,8 @@ import re
 import json
 from datetime import datetime
 import dnslib
-from backend.config import DNS_HOST, DNS_PORT, UPSTREAM_DNS
+import httpx
+from backend.config import DNS_HOST, DNS_PORT, UPSTREAM_DNS, UPSTREAM_DNS_PROVIDER
 from backend.database import get_db_connection
 
 logger = logging.getLogger("zerosink.dns")
@@ -93,11 +94,60 @@ ENGINE_NATIVE_DENY: list = [
     # only when explicitly blocked via group app-blocks.
 ]
 
+# ---------------------------------------------------------------------------
+# DNS-over-HTTPS Provider Catalogue
+# ---------------------------------------------------------------------------
+DOH_PROVIDERS = {
+    "cloudflare": {
+        "label": "Cloudflare",
+        "doh_url": "https://1.1.1.1/dns-query",
+        "fallback_ips": ["1.1.1.1", "1.0.0.1"],
+        "description": "Fast, privacy-first resolver. No logging, GDPR compliant.",
+        "icon": "mdi-shield-check",
+    },
+    "google": {
+        "label": "Google",
+        "doh_url": "https://8.8.8.8/dns-query",
+        "fallback_ips": ["8.8.8.8", "8.8.4.4"],
+        "description": "Highly reliable with global infrastructure.",
+        "icon": "mdi-google",
+    },
+    "quad9": {
+        "label": "Quad9",
+        "doh_url": "https://9.9.9.9/dns-query",
+        "fallback_ips": ["9.9.9.9", "149.112.112.112"],
+        "description": "Privacy-focused with threat blocking. Non-profit operated.",
+        "icon": "mdi-security",
+    },
+    "nextdns": {
+        "label": "NextDNS",
+        "doh_url": "https://dns.nextdns.io/dns-query",
+        "fallback_ips": ["45.90.28.0", "45.90.30.0"],
+        "description": "Configurable cloud DNS with analytics.",
+        "icon": "mdi-dns",
+    },
+    "adguard": {
+        "label": "AdGuard DNS",
+        "doh_url": "https://dns.adguard-dns.com/dns-query",
+        "fallback_ips": ["94.140.14.14", "94.140.15.15"],
+        "description": "Ad and tracker blocking at DNS level.",
+        "icon": "mdi-block-helper",
+    },
+    "custom": {
+        "label": "Custom IPs",
+        "doh_url": None,
+        "fallback_ips": [],
+        "description": "Manually specify IP addresses. Uses plain unencrypted UDP/TCP.",
+        "icon": "mdi-pencil",
+    },
+}
+
 # Caches
 CLIENTS_CACHE = []
 CUSTOM_RULES_CACHE = {}  # group_id -> {"allow": set(), "deny": set(), "allow_regex": list(), "deny_regex": list()}
 DNS_CACHE = {}          # (qtype, qname, group_id) -> (reply_bytes, expire_time, is_blocked)
 UPSTREAM_DNS_CACHE = []
+UPSTREAM_DNS_PROVIDER_CACHE = "cloudflare"  # active provider key
 LOCAL_DNS_CACHE = {}    # domain -> { 'A': [ip1], 'AAAA': [ip2] }
 
 # Premium & Parental Caches
@@ -108,6 +158,9 @@ GROUP_APP_BLOCKS_CACHE = {} # group_id -> {category: set of app_names}
 # Global State
 BLOCKING_DISABLED_UNTIL = 0.0
 PRIVACY_MODE = 0
+
+# Shared httpx AsyncClient for DoH (created lazily on first use)
+_DOH_CLIENT: httpx.AsyncClient = None
 
 # Log queue for non-blocking database writes
 log_queue = asyncio.Queue()
@@ -260,6 +313,72 @@ def reload_upstream_dns_cache():
     servers = [s.strip() for s in UPSTREAM_DNS.replace(',', ' ').split() if s.strip()]
     UPSTREAM_DNS_CACHE = servers if servers else ["1.1.1.1"]
     logger.info(f"Loaded fallback upstream DNS servers: {UPSTREAM_DNS_CACHE}")
+
+
+def reload_upstream_dns_provider_cache():
+    """Load and cache the active upstream DNS provider key from database settings or fallback."""
+    global UPSTREAM_DNS_PROVIDER_CACHE
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM settings WHERE key = 'upstream_dns_provider'")
+        row = cursor.fetchone()
+        conn.close()
+        if row and row["value"] and row["value"] in DOH_PROVIDERS:
+            UPSTREAM_DNS_PROVIDER_CACHE = row["value"]
+            logger.info(f"Loaded upstream DNS provider from settings: {UPSTREAM_DNS_PROVIDER_CACHE}")
+            return
+    except Exception as e:
+        logger.error(f"Failed to load upstream DNS provider from database: {e}")
+    # Fallback to environment variable / default config
+    UPSTREAM_DNS_PROVIDER_CACHE = UPSTREAM_DNS_PROVIDER if UPSTREAM_DNS_PROVIDER in DOH_PROVIDERS else "cloudflare"
+    logger.info(f"Loaded fallback upstream DNS provider: {UPSTREAM_DNS_PROVIDER_CACHE}")
+
+
+def _get_doh_client() -> httpx.AsyncClient:
+    """Return (and lazily create) the shared httpx AsyncClient for DoH requests."""
+    global _DOH_CLIENT
+    if _DOH_CLIENT is None or _DOH_CLIENT.is_closed:
+        _DOH_CLIENT = httpx.AsyncClient(
+            http2=True,
+            timeout=httpx.Timeout(3.0),
+            headers={"accept": "application/dns-message"},
+        )
+    return _DOH_CLIENT
+
+
+async def forward_dns_doh(data: bytes, provider_key: str = None) -> bytes:
+    """
+    Forward a raw DNS wire-format query to the configured DoH provider using
+    HTTPS POST with content-type application/dns-message.
+    Falls back to plain UDP if the DoH request fails.
+    """
+    global UPSTREAM_DNS_PROVIDER_CACHE, UPSTREAM_DNS_CACHE
+    if provider_key is None:
+        provider_key = UPSTREAM_DNS_PROVIDER_CACHE
+
+    provider = DOH_PROVIDERS.get(provider_key)
+    if not provider or not provider["doh_url"]:
+        # Custom or unknown — fall back to plain UDP
+        return await forward_dns_udp(data)
+
+    doh_url = provider["doh_url"]
+    try:
+        client = _get_doh_client()
+        response = await client.post(
+            doh_url,
+            content=data,
+            headers={"content-type": "application/dns-message"},
+        )
+        if response.status_code == 200:
+            return response.content
+        logger.warning(f"DoH provider {provider_key} returned HTTP {response.status_code}; falling back to UDP")
+    except Exception as e:
+        logger.warning(f"DoH request to {doh_url} failed ({e}); falling back to UDP")
+
+    # Transparent fallback: use the provider's known IPs over plain UDP
+    fallback_ips = provider.get("fallback_ips") or UPSTREAM_DNS_CACHE
+    return await forward_dns_udp(data, upstreams=fallback_ips)
 
 def reload_premium_cache():
     """Check and cache premium activation status from database."""
@@ -813,11 +932,16 @@ async def resolve_dns(data: bytes, client_ip: str, protocol: str) -> bytes:
         # 6. Forward to upstream
         if not status:
             status = "Allowed (Forwarded)"
-            
-        if protocol == "UDP":
-            reply_bytes = await forward_dns_udp(data)
+
+        # Use DoH for all providers except 'custom' (which uses plain UDP/TCP)
+        active_provider = UPSTREAM_DNS_PROVIDER_CACHE
+        if active_provider == "custom":
+            if protocol == "UDP":
+                reply_bytes = await forward_dns_udp(data)
+            else:
+                reply_bytes = await forward_dns_tcp(data)
         else:
-            reply_bytes = await forward_dns_tcp(data)
+            reply_bytes = await forward_dns_doh(data, provider_key=active_provider)
             
         if reply_bytes:
             # Parse answer and extract TTL for caching
@@ -1041,6 +1165,7 @@ async def start_dns_servers():
     reload_clients_cache()
     reload_custom_rules_cache()
     reload_upstream_dns_cache()
+    reload_upstream_dns_provider_cache()
     reload_local_dns_cache()
     reload_privacy_mode()
     reload_premium_cache()

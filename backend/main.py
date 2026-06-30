@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from backend.config import BASE_DIR, WEB_HOST, WEB_PORT, DEFAULT_ADMIN_USER, VERSION, UPSTREAM_DNS
+from backend.config import BASE_DIR, WEB_HOST, WEB_PORT, DEFAULT_ADMIN_USER, VERSION, UPSTREAM_DNS, UPSTREAM_DNS_PROVIDER
 from backend.database import get_db_connection, init_db, hash_password
 from backend.auth import (
     get_current_user, 
@@ -186,6 +186,7 @@ class CustomRuleCreate(BaseModel):
 
 class SettingsUpdate(BaseModel):
     upstream_dns: str
+    upstream_dns_provider: Optional[str] = None
 
 class DNSDisableRequest(BaseModel):
     duration: int  # in seconds
@@ -1585,29 +1586,60 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
     # If upstream_dns is not present in settings yet, return fallback from config
     if "upstream_dns" not in settings_dict:
         settings_dict["upstream_dns"] = UPSTREAM_DNS
+
+    # If upstream_dns_provider is not present, return fallback from config
+    if "upstream_dns_provider" not in settings_dict:
+        settings_dict["upstream_dns_provider"] = UPSTREAM_DNS_PROVIDER
         
     return settings_dict
 
 @app.post("/api/settings")
 async def update_settings(req: SettingsUpdate, current_user: dict = Depends(get_current_user)):
     """Update system settings."""
-    try:
-        # Validate the upstream DNS IPs
-        validate_dns_ips(req.upstream_dns)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-        
+    from backend.dns_engine import DOH_PROVIDERS
+
+    # Only validate custom IPs when provider is 'custom' or not specified with a known DoH provider
+    provider = req.upstream_dns_provider or "cloudflare"
+    if provider not in DOH_PROVIDERS:
+        raise HTTPException(status_code=400, detail=f"Unknown DNS provider: {provider}")
+
+    if provider == "custom":
+        try:
+            validate_dns_ips(req.upstream_dns)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('upstream_dns', ?)", (req.upstream_dns.strip(),))
+    cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('upstream_dns_provider', ?)", (provider,))
     conn.commit()
     conn.close()
     
-    # Reload the engine's cache
-    from backend.dns_engine import reload_upstream_dns_cache
+    # Reload the engine's caches
+    from backend.dns_engine import reload_upstream_dns_cache, reload_upstream_dns_provider_cache
     reload_upstream_dns_cache()
+    reload_upstream_dns_provider_cache()
     
     return {"status": "success", "message": "Settings updated successfully"}
+
+
+@app.get("/api/settings/dns-providers")
+async def get_dns_providers(current_user: dict = Depends(get_current_user)):
+    """Return the list of available DoH DNS providers for the frontend picker."""
+    from backend.dns_engine import DOH_PROVIDERS
+    providers = [
+        {
+            "key": key,
+            "label": p["label"],
+            "doh_url": p["doh_url"],
+            "description": p["description"],
+            "icon": p["icon"],
+            "encrypted": p["doh_url"] is not None,
+        }
+        for key, p in DOH_PROVIDERS.items()
+    ]
+    return providers
 
 
 # --- DNS Pause/Resume Endpoints ---

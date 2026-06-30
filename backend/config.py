@@ -9,6 +9,7 @@ DB_PATH = os.environ.get("ZEROSINK_DB_PATH", os.path.join(BASE_DIR, "zerosink.db
 DNS_HOST = os.environ.get("ZEROSINK_DNS_HOST", "0.0.0.0")
 DNS_PORT = int(os.environ.get("ZEROSINK_DNS_PORT", "53"))
 UPSTREAM_DNS = os.environ.get("ZEROSINK_UPSTREAM_DNS", "1.1.1.1")
+UPSTREAM_DNS_PROVIDER = os.environ.get("ZEROSINK_UPSTREAM_DNS_PROVIDER", "cloudflare")
 
 # Web Settings
 WEB_HOST = os.environ.get("ZEROSINK_WEB_HOST", "0.0.0.0")
@@ -44,7 +45,7 @@ DEFAULT_ADMIN_USER = os.environ.get("ZEROSINK_ADMIN_USER", "admin")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ZEROSINK_ADMIN_PASSWORD", "zerosink")
 
 # Application Version
-VERSION = "1.0.9"
+VERSION = "1.1.0"
 
 # Stripe Settings
 ZEROSINK_LICENSING_URL = os.environ.get("ZEROSINK_LICENSING_URL", "https://zerosink-licensing.ant-90c.workers.dev/verify")

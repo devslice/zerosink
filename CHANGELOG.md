@@ -2,7 +2,29 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.1.0] - 2026-06-30
+
+### Added
+
+- **DNS-over-HTTPS (DoH) Upstream Forwarding**: ZeroSink now forwards all allowed DNS queries to the upstream resolver over **encrypted HTTPS (port 443)** rather than plain UDP/TCP port 53. This means your ISP can no longer inspect or log your DNS queries. Implemented using `httpx` with HTTP/2 support and the RFC 8484 `application/dns-message` wire format via HTTPS POST.
+
+- **Upstream DNS Provider Picker**: Replaced the raw IP textarea in Settings with a visual provider card picker offering 5 pre-configured DoH providers:
+  - **Cloudflare (1.1.1.1)** — Fast, privacy-first, GDPR compliant, no logging.
+  - **Google (8.8.8.8)** — Highly reliable with global infrastructure.
+  - **Quad9 (9.9.9.9)** — Privacy-focused with malware/threat blocking. Non-profit operated.
+  - **NextDNS** — Configurable cloud DNS with analytics.
+  - **AdGuard DNS** — Ad and tracker blocking at the DNS level.
+  - **Custom IPs** — Falls back to plain UDP/TCP for manually-specified IP addresses; clearly labelled as unencrypted.
+  - Each card displays an encrypted 🔒 / unencrypted ⚠️ badge so users understand the privacy tradeoff at a glance.
+
+- **Transparent UDP Fallback**: If a DoH request fails (e.g. temporary network issue), ZeroSink silently retries using the provider's known IP over plain UDP to ensure DNS resolution never breaks.
+
+- **New API endpoint** `GET /api/settings/dns-providers` — returns the full provider catalogue as JSON so the frontend is fully data-driven and new providers can be added without UI changes.
+
+- **`upstream_dns_provider` settings key**: Persisted to the database alongside the existing `upstream_dns` custom IP field. Hot-reloaded into the DNS engine without a restart when changed via Settings.
+
 ## [1.0.9] - 2026-06-30
+
 
 ### Fixed
 
