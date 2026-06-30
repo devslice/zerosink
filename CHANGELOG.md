@@ -4,6 +4,10 @@ All notable changes to the ZeroSink project will be documented in this file.
 
 ## [1.0.9] - 2026-06-30
 
+### Fixed
+
+- **In-App Auto-Update Version Display Bug**: The `FRONTEND_VERSION` constant in `static/index.html` was stuck at `1.0.8` while `backend/config.py` had already been incremented to `1.0.9`. After an in-app update completed and the backend restarted, the `checkForUpdates()` logic detected this mismatch, cleared browser caches, and reloaded — but since the deployed HTML still had the old constant baked in, users continued to see the stale version number after refreshing. Fixed by syncing `FRONTEND_VERSION` to `1.0.9`.
+
 ### Added
 
 - **In-App PWA Installation Modal**: Replaced reliance on the default mobile browser install banner with a custom lime-green themed modal built directly into the dashboard UI. The native `beforeinstallprompt` event is intercepted, its default behaviour prevented, and the event instance saved to Alpine.js state. A polished slide-down modal with an "Install ZeroSink App" button then presents itself after a short load delay. Clicking it triggers the native `.prompt()` handler; pressing "Not now" suppresses future prompts for the session via `localStorage`. The modal automatically hides once the PWA is successfully installed via the `appinstalled` event.
