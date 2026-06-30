@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.2.2] - 2026-06-30
+
+### Changed
+
+- **Removed `https://` prefix from DoH URLs in provider cards**: Stripped the protocol prefix from displayed URLs so only the host and path are shown (e.g. `1.1.1.1/dns-query`). The full URL remains available via hover tooltip.
+
 ## [1.2.1] - 2026-06-30
 
 ### Changed

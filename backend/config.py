@@ -45,7 +45,7 @@ DEFAULT_ADMIN_USER = os.environ.get("ZEROSINK_ADMIN_USER", "admin")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ZEROSINK_ADMIN_PASSWORD", "zerosink")
 
 # Application Version
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 # Stripe Settings
 ZEROSINK_LICENSING_URL = os.environ.get("ZEROSINK_LICENSING_URL", "https://zerosink-licensing.ant-90c.workers.dev/verify")

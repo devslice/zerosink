@@ -1646,7 +1646,7 @@
  <span class="font-bold text-sm dark:text-white" x-text="provider.label"></span>
  </div>
   <!-- DoH URL -->
-  <span x-show="provider.doh_url" class="text-[10px] leading-tight font-mono text-gray-400 dark:text-neutral-500 truncate w-full max-w-full overflow-hidden" x-text="provider.doh_url" :title="provider.doh_url"></span>
+  <span x-show="provider.doh_url" class="text-[10px] leading-tight font-mono text-gray-400 dark:text-neutral-500 truncate w-full max-w-full overflow-hidden" x-text="provider.doh_url.replace('https://', '')" :title="provider.doh_url"></span>
  <!-- Description -->
  <span class="text-2xs text-gray-500 dark:text-neutral-400 leading-relaxed" x-text="provider.description"></span>
  <!-- Selected check -->
@@ -2513,7 +2513,7 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- FRONTEND_VERSION: '1.2.1',
+ FRONTEND_VERSION: '1.2.2',
 premiumResolving: false,
   checkoutLoading: false,
 premiumActive: false,
