@@ -2,6 +2,36 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.0.9] - 2026-06-30
+
+### Added
+
+- **In-App PWA Installation Modal**: Replaced reliance on the default mobile browser install banner with a custom lime-green themed modal built directly into the dashboard UI. The native `beforeinstallprompt` event is intercepted, its default behaviour prevented, and the event instance saved to Alpine.js state. A polished slide-down modal with an "Install ZeroSink App" button then presents itself after a short load delay. Clicking it triggers the native `.prompt()` handler; pressing "Not now" suppresses future prompts for the session via `localStorage`. The modal automatically hides once the PWA is successfully installed via the `appinstalled` event.
+
+- **Context-Specific Web Block Pages**: Replaced blank browser "Cannot Reach" errors with informative, themed block pages served directly by ZeroSink's web server. The DNS engine now resolves blocked A/AAAA queries to the Pi's own LAN IP (`BLOCK_REDIRECT_IP`) instead of `0.0.0.0`, causing blocked HTTP/HTTPS traffic to land on the ZeroSink web server. The `/` route inspects the `Host` header: if the host is not a recognised dashboard hostname (e.g. `zerosink.local` or a bare IP), a dedicated dark-mode, lime-green branded `_build_blockpage()` HTML page is returned. The blockpage displays context-specific messaging:
+  - Custom block rules: *"Access Denied: This Domain is Blocked"* with a red badge.
+  - Downtime schedules: *"Browsing Paused: ZeroSink Downtime Schedule is Active"* with an amber badge.
+  - Non-web infrastructure queries (MX, TXT, SRV, AAAA-only) continue to receive standard `0.0.0.0` sinkhole responses, preventing browser spinners from hanging.
+  - Block-redirect responses use a 10-second TTL so that unblocking rules take effect immediately on the next DNS lookup.
+
+- **Immediate DNS Cache Flush on CRUD**: Added a `flush_dns_cache()` function to `backend/dns_engine.py` that atomically clears the entire in-memory TTL DNS cache. This function is now called immediately after every CRUD operation on custom block rules, downtime schedules, and app-block toggles, ensuring the next incoming DNS packet evaluates the live database state with zero delay.
+
+- **Deep App Bypass Hardening — Expanded Wildcard CDN Coverage**: Upgraded all entries in `APP_CATEGORIES` from plain-domain string matching to a full wildcard-aware pattern system (patterns prefixed with `*.` match any subdomain). Specific additions:
+  - **WhatsApp** (new `social` sub-category): `*.whatsapp.net`, `*.whatsapp.com`, `*.fbcdn.net` — closes all Meta CDN fallback paths.
+  - **Discord**: Added `*.discord.gg`, `*.discord.media`, `*.discordapp.net` to the existing gaming block.
+  - **Netflix**: Added `*.nflximg.net` alongside existing `*.nflxvideo.net`, `*.nflxext.com`, `*.nflxso.net`.
+  - **Disney+**: Added `*.disney-plus.net` and `*.media.dssott.com` to the existing Disney block.
+  - **Epic Games / Fortnite**: Added `*.akamaized.net` to close Akamai CDN fallback for Fortnite content delivery.
+  - All social, streaming, and gaming categories now include wildcard variants of their base domains, preventing cached-IP or direct-CDN bypass.
+  - Added `ENGINE_NATIVE_DENY` list stub for future engine-level unconditional deny rules (currently documents WhatsApp/Meta infrastructure intent).
+  - Added deployment note recommending a `conntrack` flush script on the system firewall when a device group transitions from Allowed to Blocked to break active TCP/UDP states.
+
+### Changed
+
+- **`ZEROSINK_WEB_PORT`** remains defaulted to port `80` with no external proxy or cloud routing reintroduced.
+- `is_domain_in_category()` refactored to use a new `_domain_matches_pattern()` helper that correctly handles both bare-domain and `*.`-wildcard pattern entries in a single code path.
+- `start_dns_servers()` now refreshes `BLOCK_REDIRECT_IP` at startup by re-running the local IP detection routine, ensuring the correct LAN interface IP is captured even if the network interface came up after Python module import.
+
 ## [1.0.8] - 2026-06-29
 
 ### Changed

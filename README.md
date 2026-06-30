@@ -133,6 +133,30 @@ Many Linux distributions run `systemd-resolved` by default, which binds to port 
 * **IP CIDR Cache**: Network ranges are pre-parsed on startup and configuration update. Lookups check address range inclusion in a fast memory cache loop.
 * **Log Queueing**: DNS transactions are queued in a thread-safe `asyncio.Queue` and written to disk in background batches. This isolates query resolution latency from SQLite disk writes.
 * **TTL Cache Layer**: Resolved DNS replies are saved in-memory matching their DNS TTL. This completely bypasses the network and database for hot domains.
+* **Immediate Cache Flush on Rule Changes**: The in-memory DNS cache is fully invalidated the moment any custom block rule, downtime schedule, or app-block toggle is modified via the dashboard, ensuring zero-delay policy enforcement.
+
+---
+
+## Active Connection Hardening (Conntrack Flush)
+
+DNS blocking stops **new** connections from resolving blocked domains, but applications that already have open TCP/UDP sessions (e.g. streaming, gaming, persistent WebSockets) can continue to transmit data over those existing connections even after a block rule is applied.
+
+To fully cut active connections when a device group is toggled from **Allowed → Blocked**, it is recommended to run a `conntrack` flush on the Linux firewall to drop active NAT and connection-tracking states:
+
+```bash
+# Flush all active tracked connections for a specific client IP
+sudo conntrack -D -s <client_ip>
+
+# Or flush all tracked connections globally (more aggressive)
+sudo conntrack -F
+
+# Optionally combine with a reset of iptables ESTABLISHED rules:
+sudo iptables -I FORWARD -s <client_ip> -m state --state ESTABLISHED,RELATED -j DROP
+sleep 2
+sudo iptables -D FORWARD -s <client_ip> -m state --state ESTABLISHED,RELATED -j DROP
+```
+
+This can be triggered from a custom webhook, systemd service, or hooked into the ZeroSink API response for app-block toggle events via a local shell script on the Pi.
 
 ---
 

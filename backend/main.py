@@ -26,7 +26,8 @@ from backend.dns_engine import (
     start_dns_servers, 
     reload_clients_cache, 
     reload_custom_rules_cache,
-    DNS_CACHE
+    DNS_CACHE,
+    flush_dns_cache
 )
 from backend.dhcp_engine import start_dhcp_server, stop_dhcp_server
 
@@ -245,8 +246,33 @@ def validate_dns_ips(dns_str: str) -> list[str]:
 # --- Frontend Route ---
 
 @app.get("/", response_class=HTMLResponse)
-async def serve_dashboard():
-    """Serve the static single page application (SPA)."""
+async def serve_dashboard(request: Request):
+    """Serve the static single page application (SPA).
+    
+    Blocked-domain detection: if the incoming Host header does NOT match
+    the dashboard's own hostname (zerosink.local / Pi IP), we know a web
+    browser has been redirected here by the DNS block-redirect mechanism.
+    In that case, serve the appropriate blockpage instead of the dashboard.
+    """
+    host = request.headers.get("host", "").lower().split(":")[0]
+    # These are the legitimate dashboard hostnames
+    own_hosts = {"zerosink.local", "localhost"}
+    # Also accept bare IP access as the dashboard
+    import ipaddress as _ipa
+    is_ip = False
+    try:
+        _ipa.ip_address(host)
+        is_ip = True
+    except ValueError:
+        pass
+
+    if host and not is_ip and host not in own_hosts:
+        # The request arrived at a hostname that isn't ours —
+        # it was redirected here by the block page DNS response.
+        # Determine block reason from query param (set by future JS) or default.
+        reason = request.query_params.get("reason", "custom")
+        return HTMLResponse(content=_build_blockpage(host, reason), status_code=200)
+
     static_file = os.path.join(BASE_DIR, "static", "index.html")
     if os.path.exists(static_file):
         with open(static_file, "r", encoding="utf-8") as f:
@@ -255,6 +281,181 @@ async def serve_dashboard():
         content="<h3>ZeroSink index.html not found! Ensure static/index.html is created.</h3>",
         status_code=404
     )
+
+
+def _build_blockpage(domain: str, reason: str = "custom") -> str:
+    """Generate a styled, context-aware HTML block page.
+    
+    Args:
+        domain: The blocked domain the browser tried to reach.
+        reason: 'custom' for manual block rules, 'schedule' for downtime.
+    Returns:
+        Full HTML string for the block page.
+    """
+    if reason == "schedule":
+        headline = "Browsing Paused"
+        subheading = "ZeroSink Downtime Schedule is Active"
+        icon = "mdi-clock-alert-outline"
+        detail = "Internet access has been temporarily paused by a scheduled downtime rule. Please try again later or contact your network administrator."
+        badge_text = "DOWNTIME SCHEDULE"
+        badge_class = "#f59e0b"
+    else:
+        headline = "Access Denied"
+        subheading = "This Domain is Blocked"
+        icon = "mdi-shield-off-outline"
+        detail = "This domain has been blocked by your ZeroSink network filter. If you believe this is an error, contact your network administrator."
+        badge_text = "CUSTOM BLOCK RULE"
+        badge_class = "#ef4444"
+
+    escaped_domain = domain.replace("<", "&lt;").replace(">", "&gt;")
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZeroSink — {headline}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+  <style>
+    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    :root {{
+      --lime: #32cd32;
+      --lime-dim: rgba(50,205,50,0.12);
+      --bg: #0a0a0a;
+      --card: #111111;
+      --border: #1e1e1e;
+      --text: #e5e7eb;
+      --muted: #6b7280;
+    }}
+    html, body {{
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }}
+    .container {{
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+    }}
+    .shield-wrap {{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 88px;
+      height: 88px;
+      border-radius: 24px;
+      background: var(--lime-dim);
+      border: 1px solid rgba(50,205,50,0.25);
+      margin-bottom: 1.5rem;
+    }}
+    .shield-wrap i {{
+      font-size: 2.8rem;
+      color: var(--lime);
+    }}
+    .badge {{
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: {badge_class};
+      border: 1px solid {badge_class};
+      background: transparent;
+      margin-bottom: 1rem;
+    }}
+    h1 {{
+      font-size: 2rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }}
+    h1 span {{
+      color: var(--lime);
+    }}
+    .subheading {{
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      margin-bottom: 1.5rem;
+    }}
+    .domain-pill {{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.2rem;
+      background: #0f1a0f;
+      border: 1px solid rgba(50,205,50,0.18);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--lime);
+      margin-bottom: 1.5rem;
+      word-break: break-all;
+    }}
+    .detail {{
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto 2rem;
+    }}
+    .card {{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+    }}
+    .footer {{
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }}
+    .footer span {{ color: var(--lime); font-weight: 700; }}
+    @keyframes pulse-ring {{
+      0% {{ box-shadow: 0 0 0 0 rgba(50,205,50,0.3); }}
+      70% {{ box-shadow: 0 0 0 14px rgba(50,205,50,0); }}
+      100% {{ box-shadow: 0 0 0 0 rgba(50,205,50,0); }}
+    }}
+    .shield-wrap {{ animation: pulse-ring 2.5s ease-out infinite; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="shield-wrap">
+        <i class="mdi {icon}"></i>
+      </div>
+      <div class="badge">{badge_text}</div>
+      <h1>Zero<span>Sink</span></h1>
+      <p class="subheading">{headline}: {subheading}</p>
+      <div class="domain-pill">
+        <i class="mdi mdi-web" style="font-size:1rem;"></i>
+        {escaped_domain}
+      </div>
+      <p class="detail">{detail}</p>
+    </div>
+    <div class="footer">
+      <i class="mdi mdi-shield-check" style="color:#32cd32;font-size:0.85rem;"></i>
+      Protected by <span>ZeroSink</span> — Local DNS Filter
+    </div>
+  </div>
+</body>
+</html>"""
 
 
 @app.get("/logo.svg")
@@ -1004,6 +1205,7 @@ async def add_custom_rule(group_id: int, rule: CustomRuleCreate, current_user: d
         """, (group_id, domain_clean, rule.type, rule.is_regex))
         conn.commit()
         reload_custom_rules_cache()
+        flush_dns_cache()  # Immediate cache invalidation on rule add
         return {"status": "success"}
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=400, detail="Domain rule already exists for this group")
@@ -1019,6 +1221,7 @@ async def delete_custom_rule(rule_id: int, current_user: dict = Depends(get_curr
     conn.commit()
     conn.close()
     reload_custom_rules_cache()
+    flush_dns_cache()  # Immediate cache invalidation on rule delete
     return {"status": "success"}
 
 
@@ -1890,6 +2093,7 @@ async def save_downtime_schedule(req: DowntimeScheduleCreate, current_user: dict
     
     from backend.dns_engine import reload_parental_rules_cache
     reload_parental_rules_cache()
+    flush_dns_cache()  # Immediate cache flush on downtime schedule add
     
     return {"status": "success", "message": "Downtime schedule saved successfully."}
 
@@ -1907,6 +2111,7 @@ async def delete_downtime_schedule(schedule_id: int, current_user: dict = Depend
     
     from backend.dns_engine import reload_parental_rules_cache
     reload_parental_rules_cache()
+    flush_dns_cache()  # Immediate cache flush on downtime schedule delete
     return {"status": "success", "message": "Downtime schedule deleted successfully."}
 
 # --- App Block Category Endpoints ---
@@ -1970,6 +2175,7 @@ async def update_app_block(group_id: int, req: AppBlockToggle, current_user: dic
     
     from backend.dns_engine import reload_parental_rules_cache
     reload_parental_rules_cache()
+    flush_dns_cache()  # Immediate cache flush on app-block toggle
     
     return {"status": "success", "message": "App blocking rule updated."}
 

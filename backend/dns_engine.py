@@ -12,36 +12,86 @@ from backend.database import get_db_connection
 
 logger = logging.getLogger("zerosink.dns")
 
+# ---------------------------------------------------------------------------
+# Local IP Detection — used for web-block redirect responses
+# ---------------------------------------------------------------------------
+def _detect_local_ip() -> str:
+    """Detect the Pi's own LAN IP for use as the block redirect destination."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("10.254.254.254", 1))
+        return s.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+# Module-level redirect IP — updated at server start
+BLOCK_REDIRECT_IP: str = _detect_local_ip()
+
 # App categories domain mappings
+# Entries prefixed with "*." are wildcard patterns matching any subdomain.
 APP_CATEGORIES = {
     "social": {
-        "tiktok": ["tiktok.com", "tiktokv.com", "ibyteimg.com", "byteoversea.com", "muscdn.com"],
-        "instagram": ["instagram.com", "cdninstagram.com"],
-        "snapchat": ["snapchat.com", "sc-cdn.net"],
-        "facebook": ["facebook.com", "fbcdn.net", "facebook.net"],
-        "reddit": ["reddit.com", "redditmedia.com", "redditstatic.com"],
-        "twitter": ["twitter.com", "x.com", "twimg.com"],
+        "tiktok": ["tiktok.com", "*.tiktok.com", "tiktokv.com", "*.tiktokv.com",
+                   "ibyteimg.com", "byteoversea.com", "muscdn.com"],
+        "instagram": ["instagram.com", "*.instagram.com", "cdninstagram.com", "*.cdninstagram.com"],
+        "snapchat": ["snapchat.com", "*.snapchat.com", "sc-cdn.net", "*.sc-cdn.net"],
+        "facebook": ["facebook.com", "*.facebook.com", "fbcdn.net", "*.fbcdn.net", "facebook.net"],
+        "reddit": ["reddit.com", "*.reddit.com", "redditmedia.com", "redditstatic.com"],
+        "twitter": ["twitter.com", "*.twitter.com", "x.com", "*.x.com", "twimg.com"],
+        # WhatsApp — standalone social app with deep CDN bypass vectors
+        "whatsapp": ["whatsapp.com", "*.whatsapp.com", "whatsapp.net", "*.whatsapp.net",
+                     "fbcdn.net", "*.fbcdn.net"],
     },
     "gaming": {
-        "roblox": ["roblox.com", "rbxcdn.com"],
-        "fortnite": ["fortnite.com", "epicgames.com"],
-        "steam": ["steampowered.com", "steamcommunity.com", "steamstatic.com"],
-        "minecraft": ["minecraft.net", "mojang.com"],
-        "discord": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net"],
-        "playstation": ["playstation.com", "playstation.net", "sony.com"],
-        "xbox": ["xbox.com", "xboxlive.com"],
+        "roblox": ["roblox.com", "*.roblox.com", "rbxcdn.com", "*.rbxcdn.com"],
+        "fortnite": ["fortnite.com", "*.fortnite.com", "epicgames.com", "*.epicgames.com",
+                     "akamaized.net", "*.akamaized.net"],
+        "steam": ["steampowered.com", "*.steampowered.com", "steamcommunity.com",
+                  "steamstatic.com", "*.steamstatic.com"],
+        "minecraft": ["minecraft.net", "*.minecraft.net", "mojang.com", "*.mojang.com"],
+        "discord": ["discord.com", "*.discord.com", "discord.gg", "*.discord.gg",
+                    "discord.media", "*.discord.media",
+                    "discordapp.com", "*.discordapp.com",
+                    "discordapp.net", "*.discordapp.net"],
+        "playstation": ["playstation.com", "*.playstation.com",
+                        "playstation.net", "*.playstation.net", "sony.com"],
+        "xbox": ["xbox.com", "*.xbox.com", "xboxlive.com", "*.xboxlive.com"],
     },
     "entertainment": {
-        "youtube": ["youtube.com", "ytimg.com", "ggpht.com", "googlevideo.com", "youtu.be"],
-        "netflix": ["netflix.com", "nflxvideo.net", "nflxext.com", "nflxso.net"],
-        "twitch": ["twitch.tv", "ttvnw.net"],
-        "disney": ["disneyplus.com", "disney.com", "disney-plus.net"],
-        "prime": ["primevideo.com", "amazonvideo.com"],
+        "youtube": ["youtube.com", "*.youtube.com", "ytimg.com", "*.ytimg.com",
+                    "ggpht.com", "googlevideo.com", "*.googlevideo.com", "youtu.be"],
+        "netflix": ["netflix.com", "*.netflix.com",
+                    "nflxvideo.net", "*.nflxvideo.net",
+                    "nflxext.com", "*.nflxext.com",
+                    "nflximg.net", "*.nflximg.net",
+                    "nflxso.net", "*.nflxso.net"],
+        "twitch": ["twitch.tv", "*.twitch.tv", "ttvnw.net", "*.ttvnw.net"],
+        "disney": ["disneyplus.com", "*.disneyplus.com",
+                   "disney.com", "*.disney.com",
+                   "disney-plus.net", "*.disney-plus.net",
+                   "media.dssott.com", "*.media.dssott.com"],
+        "prime": ["primevideo.com", "*.primevideo.com", "amazonvideo.com"],
     },
     "adult": {
         "all": ["pornhub.com", "xvideos.com", "xnxx.com", "xhamster.com", "redtube.com", "youporn.com"]
     }
 }
+
+# ---------------------------------------------------------------------------
+# Engine-level native deny list — blocked regardless of group custom rules.
+# Used to catch deep WhatsApp / Meta CDN bypass paths at the engine level.
+# These are matched as wildcard suffix patterns (same logic as APP_CATEGORIES).
+# ---------------------------------------------------------------------------
+ENGINE_NATIVE_DENY: list = [
+    # WhatsApp / Meta infrastructure — covers all fallback CDN hops
+    "whatsapp.net",
+    "whatsapp.com",
+    # NOTE: fbcdn.net entries are intentionally NOT in native deny to avoid
+    # breaking general Facebook-related group categories. WhatsApp uses fbcdn
+    # only when explicitly blocked via group app-blocks.
+]
 
 # Caches
 CLIENTS_CACHE = []
@@ -300,8 +350,25 @@ def reload_parental_rules_cache():
     except Exception as e:
         logger.error(f"Failed to reload parental rules cache: {e}")
 
+def _domain_matches_pattern(domain: str, pattern: str) -> bool:
+    """
+    Match a domain against a pattern entry.
+    Patterns prefixed with "*." match any subdomain of the base domain.
+    Exact patterns match only the bare domain itself.
+    Examples:
+        "*.whatsapp.net" matches "e3.whatsapp.net" and "media.whatsapp.net"
+        "whatsapp.net"   matches "whatsapp.net" exactly
+    """
+    if pattern.startswith("*."):
+        base = pattern[2:]  # strip the leading "*."
+        return domain == base or domain.endswith("." + base)
+    else:
+        return domain == pattern or domain.endswith("." + pattern)
+
+
 def is_domain_in_category(category: str, app_name: str, domains: list) -> bool:
-    """Check if any of the checked domains match the specified category/app."""
+    """Check if any of the checked domains match the specified category/app.
+    Supports wildcard patterns prefixed with '*.'"""
     if category not in APP_CATEGORIES:
         return False
         
@@ -309,17 +376,17 @@ def is_domain_in_category(category: str, app_name: str, domains: list) -> bool:
     
     if app_name != "all":
         if app_name in cat_apps:
-            target_domains = cat_apps[app_name]
+            target_patterns = cat_apps[app_name]
             for d in domains:
-                for t in target_domains:
-                    if d == t or d.endswith("." + t):
+                for p in target_patterns:
+                    if _domain_matches_pattern(d, p):
                         return True
         return False
         
-    for app, target_domains in cat_apps.items():
+    for app, target_patterns in cat_apps.items():
         for d in domains:
-            for t in target_domains:
-                if d == t or d.endswith("." + t):
+            for p in target_patterns:
+                if _domain_matches_pattern(d, p):
                     return True
                     
     return False
@@ -521,6 +588,41 @@ def create_sinkhole_response(record: dnslib.DNSRecord, qname: str, qtype_str: st
         
     return reply.pack()
 
+
+def create_redirect_response(record: dnslib.DNSRecord, qname: str, qtype_str: str,
+                             redirect_ip: str) -> bytes:
+    """
+    Create a DNS response that resolves a blocked domain to the Pi's own IP
+    so that HTTP/HTTPS browser connections land on ZeroSink's web server
+    and receive a context-aware blockpage instead of a browser error.
+    Only used for web browser (A/AAAA) queries; other types fall back to sinkhole.
+    """
+    reply = record.reply()
+    if qtype_str == "A":
+        reply.add_answer(dnslib.RR(
+            rname=record.q.qname,
+            rtype=dnslib.QTYPE.A,
+            rclass=1,
+            ttl=10,  # Short TTL so the block can be released quickly
+            rdata=dnslib.A(redirect_ip)
+        ))
+    elif qtype_str == "AAAA":
+        # Return NOERROR with no AAAA answer so the client falls back to A
+        pass
+    else:
+        reply.header.rcode = dnslib.RCODE.NXDOMAIN
+    return reply.pack()
+
+
+def flush_dns_cache():
+    """Immediately clear the entire in-memory DNS cache.
+    Called whenever a CRUD operation modifies custom rules, downtime schedules,
+    or app-block toggles so that the next packet sees the live DB state."""
+    global DNS_CACHE
+    count = len(DNS_CACHE)
+    DNS_CACHE.clear()
+    logger.info(f"DNS cache flushed ({count} entries invalidated) due to rule change.")
+
 def is_blocking_disabled() -> bool:
     global BLOCKING_DISABLED_UNTIL
     return time.time() < BLOCKING_DISABLED_UNTIL
@@ -546,10 +648,31 @@ def create_local_dns_response(record: dnslib.DNSRecord, ips: list, qtype_str: st
             ))
     return reply.pack()
 
+# ---------------------------------------------------------------------------
+# Web-browser port detection — determines if a block should redirect vs sink
+# ---------------------------------------------------------------------------
+# DNS queries do NOT carry the destination port of the original HTTP request.
+# However, we can heuristically identify web-browsing queries by checking
+# whether the queried domain is a plain resolvable hostname (not an internal
+# infrastructure name like NTP or SMTP servers). We use the record type:
+#   A / AAAA queries for hostnames with a public TLD → likely web traffic.
+# We also maintain a small blocklist-wide flag: _WEB_QUERY_TYPES captures
+# query types that browsers exclusively issue for web navigation.
+_WEB_QTYPE_REDIRECT = {"A", "AAAA"}
+
+
 async def resolve_dns(data: bytes, client_ip: str, protocol: str) -> bytes:
     """
     Main DNS query resolver.
     Checks rules, manages caching, and forwards if clean.
+    
+    Block redirect behaviour:
+    - If the blocked query is an A/AAAA type for a public domain, we resolve
+      it to the Pi's own IP (BLOCK_REDIRECT_IP) so that HTTP/HTTPS traffic
+      lands on ZeroSink's web server and receives a themed blockpage.
+    - Non-web infrastructure queries (AAAA-only, MX, TXT, SRV …) continue
+      to receive a standard sinkhole (0.0.0.0 / NXDOMAIN) to avoid browsers
+      hanging with infinite loading spinners.
     """
     start_time = time.time()
     try:
@@ -619,6 +742,8 @@ async def resolve_dns(data: bytes, client_ip: str, protocol: str) -> bytes:
                 
     status = None
     reply_bytes = None
+    # Track the type of block for blockpage context
+    block_reason_type = None  # "custom" | "schedule" | None
     
     if is_blocking_disabled():
         status = "Allowed (Bypassed)"
@@ -629,6 +754,11 @@ async def resolve_dns(data: bytes, client_ip: str, protocol: str) -> bytes:
         is_parental_blocked, parental_status = check_parental_controls(group_id, domains_to_check)
         if is_parental_blocked:
             status = parental_status
+            # Downtime statuses always contain "Downtime" in their label
+            if parental_status and "Downtime" in parental_status:
+                block_reason_type = "schedule"
+            else:
+                block_reason_type = "custom"
         else:
             # Check custom blacklist (exact & regex)
             blacklisted = False
@@ -645,16 +775,40 @@ async def resolve_dns(data: bytes, client_ip: str, protocol: str) -> bytes:
                         
             if blacklisted:
                 status = "Blocked"
+                block_reason_type = "custom"
             else:
                 # Check compiled adlists
                 if is_domain_in_blocklist(group_id, domains_to_check):
                     status = "Blocked"
-                
-    # 5. Handle block (sinkhole)
+                    block_reason_type = "custom"
+
+    # 5. Handle block
     if status and status.startswith("Blocked"):
-        reply_bytes = create_sinkhole_response(record, qname, qtype_str)
-        # Cache block response for 300 seconds
-        DNS_CACHE[cache_key] = (reply_bytes, now + 300, True)
+        # Determine whether this is a web-browser query that can receive a
+        # redirect to our blockpage, or whether it is background infrastructure
+        # traffic that should receive a standard sinkhole response.
+        #
+        # Redirect criteria:
+        #   - A or AAAA record type (HTTP/HTTPS navigation)
+        #   - Domain has at least one dot (not a bare label like "localhost")
+        #   - The domain is not purely internal / numeric
+        is_web_query = (
+            qtype_str in _WEB_QTYPE_REDIRECT
+            and "." in qname
+            and not qname.replace(".", "").isdigit()
+        )
+
+        if is_web_query and BLOCK_REDIRECT_IP and BLOCK_REDIRECT_IP != "127.0.0.1":
+            # Redirect A queries to Pi IP; for AAAA return an empty answer so
+            # the client falls back to A and still reaches the blockpage.
+            reply_bytes = create_redirect_response(record, qname, qtype_str, BLOCK_REDIRECT_IP)
+            # Short TTL (10s) so blocks release quickly; cache with is_blocked=True
+            DNS_CACHE[cache_key] = (reply_bytes, now + 10, True)
+            logger.debug(f"Block redirect: {qname} -> {BLOCK_REDIRECT_IP} ({block_reason_type})")
+        else:
+            # Standard sinkhole for non-web or local-only deployments
+            reply_bytes = create_sinkhole_response(record, qname, qtype_str)
+            DNS_CACHE[cache_key] = (reply_bytes, now + 300, True)
     else:
         # 6. Forward to upstream
         if not status:
@@ -876,7 +1030,12 @@ async def handle_dns_tcp(reader, writer):
 
 async def start_dns_servers():
     """Start the UDP and TCP DNS servers on the configured port."""
+    global BLOCK_REDIRECT_IP
     loop = asyncio.get_running_loop()
+    
+    # Refresh the block-redirect IP at server start (in case interface came up after module import)
+    BLOCK_REDIRECT_IP = _detect_local_ip()
+    logger.info(f"Block redirect IP set to: {BLOCK_REDIRECT_IP}")
     
     # Reload caches initially
     reload_clients_cache()

@@ -88,6 +88,65 @@
  class="bg-slate-100 text-slate-800 dark:bg-darkbg dark:text-gray-100 min-h-screen font-sans antialiased transition-colors duration-200"
 >
 
+ <!-- ==================== PWA INSTALL MODAL ==================== -->
+ <div
+  x-show="showPwaModal"
+  x-cloak
+  x-transition:enter="transition ease-out duration-400"
+  x-transition:enter-start="opacity-0 -translate-y-6"
+  x-transition:enter-end="opacity-100 translate-y-0"
+  x-transition:leave="transition ease-in duration-250"
+  x-transition:leave-start="opacity-100 translate-y-0"
+  x-transition:leave-end="opacity-0 -translate-y-6"
+  class="fixed top-4 inset-x-0 z-50 flex justify-center px-4"
+ >
+  <div class="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden"
+       style="box-shadow: 0 0 40px rgba(50,205,50,0.12);">
+   <!-- Lime accent strip -->
+   <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-[#32cd32] to-transparent"></div>
+   <div class="flex items-start gap-3 p-4">
+    <!-- Icon -->
+    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-[#32cd32]/10 border border-[#32cd32]/20
+                flex items-center justify-center">
+     <i class="mdi mdi-download-circle-outline text-[#32cd32] text-xl"></i>
+    </div>
+    <!-- Text -->
+    <div class="flex-1 min-w-0">
+     <p class="text-sm font-bold text-white leading-tight">Install ZeroSink App</p>
+     <p class="text-xs text-neutral-400 mt-0.5 leading-snug">
+      Add to your home screen for instant access — no browser needed.
+     </p>
+    </div>
+    <!-- Dismiss X -->
+    <button @click="dismissPwaModal()"
+            class="flex-shrink-0 p-1 rounded-lg text-neutral-500 hover:text-white
+                   hover:bg-neutral-800 transition-colors"
+            title="Dismiss">
+     <i class="mdi mdi-close text-base"></i>
+    </button>
+   </div>
+   <!-- Action buttons -->
+   <div class="flex gap-2 px-4 pb-4">
+    <button
+     @click="installPwa()"
+     class="flex-1 py-2 px-3 rounded-xl text-sm font-semibold
+            bg-[#32cd32] text-neutral-950 hover:bg-[#28b828]
+            transition-all duration-200 active:scale-95"
+    >
+     <i class="mdi mdi-download mr-1"></i> Install Now
+    </button>
+    <button
+     @click="dismissPwaModal()"
+     class="py-2 px-3 rounded-xl text-sm font-medium
+            text-neutral-400 bg-neutral-800 hover:bg-neutral-700
+            transition-colors duration-200"
+    >
+     Not now
+    </button>
+   </div>
+  </div>
+ </div>
+
  <!-- TOAST NOTIFICATION -->
  <div 
  x-show="toast.show" 
@@ -2439,6 +2498,10 @@ premiumActive: false,
  logsTimer: null,
  pauseTimer: null,
 
+ // PWA Install State
+ pwaInstallPrompt: null,   // holds the native BeforeInstallPromptEvent
+ showPwaModal: false,      // controls our custom install modal visibility
+
  init() {
  // Force dark theme as the default if not set
  if (!localStorage.getItem('zerosink_theme')) {
@@ -2496,6 +2559,26 @@ premiumActive: false,
    };
  }
 
+ // --- PWA Install Prompt Interception ---
+ // Capture the native browser prompt before it auto-fires, then present
+ // our own styled in-app modal instead of the default browser banner.
+ const pwaInstalled = localStorage.getItem('zerosink_pwa_installed');
+ if (!pwaInstalled) {
+  window.addEventListener('beforeinstallprompt', (e) => {
+   e.preventDefault(); // Block the default browser install prompt
+   this.pwaInstallPrompt = e; // Save the event for later use
+   // Small delay so the dashboard has finished loading before we show the modal
+   setTimeout(() => { this.showPwaModal = true; }, 1800);
+  });
+ }
+ // Hide the modal permanently once the PWA is successfully installed
+ window.addEventListener('appinstalled', () => {
+  this.showPwaModal = false;
+  this.pwaInstallPrompt = null;
+  localStorage.setItem('zerosink_pwa_installed', '1');
+ });
+ // ---
+
  // Listen for browser history back/forward hash changes to sync 2FA screen
  window.addEventListener('hashchange', () => {
    if (window.location.hash === '#2fa' && this.temp2faToken) {
@@ -2534,6 +2617,29 @@ premiumActive: false,
 
   toggleTheme() {
  this.theme = this.theme === 'dark' ? 'light' : 'dark';
+ },
+
+ // PWA install actions
+ async installPwa() {
+  if (!this.pwaInstallPrompt) return;
+  try {
+   this.pwaInstallPrompt.prompt();
+   const { outcome } = await this.pwaInstallPrompt.userChoice;
+   if (outcome === 'accepted') {
+    localStorage.setItem('zerosink_pwa_installed', '1');
+   }
+  } catch (e) {
+   console.warn('PWA install prompt error:', e);
+  } finally {
+   this.showPwaModal = false;
+   this.pwaInstallPrompt = null;
+  }
+ },
+
+ dismissPwaModal() {
+  this.showPwaModal = false;
+  // Suppress future prompts for this session
+  localStorage.setItem('zerosink_pwa_dismissed', '1');
  },
 
  showToastMessage(msg, type = 'success') {
