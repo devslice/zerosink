@@ -481,7 +481,7 @@
  <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
  <div 
  x-show="token" 
- class="flex flex-col md:flex-row min-h-screen"
+ class="flex flex-col md:flex-row h-screen overflow-hidden"
  x-cloak
  >
  <!-- MOBILE HEADER -->
@@ -730,7 +730,7 @@
  </aside>
 
  <!-- CONTENT WRAPPER -->
- <main class="flex-1 min-w-0 p-6 md:p-10 overflow-y-auto max-h-screen">
+ <main class="flex-1 min-w-0 p-6 md:p-10 overflow-y-auto">
  
  <!-- ==================== TAB: DASHBOARD ==================== -->
  <div x-show="activeTab === 'dashboard'" class="space-y-8">

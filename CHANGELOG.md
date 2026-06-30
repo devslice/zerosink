@@ -32,6 +32,12 @@ All notable changes to the ZeroSink project will be documented in this file.
 - `is_domain_in_category()` refactored to use a new `_domain_matches_pattern()` helper that correctly handles both bare-domain and `*.`-wildcard pattern entries in a single code path.
 - `start_dns_servers()` now refreshes `BLOCK_REDIRECT_IP` at startup by re-running the local IP detection routine, ensuring the correct LAN interface IP is captured even if the network interface came up after Python module import.
 
+### Fixed
+
+- **Dashboard Content Clipping**: Fixed the main dashboard layout wrapper using `min-h-screen` which allowed the page to grow taller than the viewport, cutting off the bottom of the content. Changed the wrapper to `h-screen overflow-hidden` so the sidebar and main content area are always constrained to the viewport height. The main scroll area (`overflow-y-auto`) now handles all scrolling within the bounded flex container, ensuring all dashboard content is always reachable. Also removed the redundant `max-h-screen` from the `<main>` element since the parent now enforces the boundary correctly.
+
+- **Session Lost After Updates/Restarts — JWT Secret Persistence**: Previously `JWT_SECRET` was generated with `secrets.token_hex(32)` on every process start, which meant all active JWT sessions were invalidated every time the service restarted (e.g. after an automatic update). Added `_load_or_create_jwt_secret()` in `backend/config.py` which saves a randomly generated secret to `data/.jwt_secret` on first boot and loads the same key on every subsequent start. Users will now stay logged in across updates and service restarts. The `ZEROSINK_JWT_SECRET` environment variable still takes priority for containerised deployments.
+
 ## [1.0.8] - 2026-06-29
 
 ### Changed
