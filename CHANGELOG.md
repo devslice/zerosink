@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.2.0] - 2026-06-30
+
+### Changed
+
+- **Upstream DNS Provider padlock badges**: Replaced the "Encrypted"/"Unencrypted" text labels in each provider card with a coloured padlock icon — green (`#32cd32`) closed lock for encrypted (DoH) providers, red open lock for unencrypted (Custom IPs). Added an inline legend in the section description to clarify the icon meanings.
+
 ## [1.1.0] - 2026-06-30
 
 ### Added

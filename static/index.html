@@ -1618,7 +1618,7 @@
  <i class="mdi mdi-shield-lock mr-2 text-lime-700 dark:text-lime-400"></i>Upstream DNS Provider
  </h3>
 
- <p class="text-xs text-gray-500 dark:text-neutral-400">ZeroSink forwards allowed queries to your chosen upstream resolver over <strong>DNS-over-HTTPS (DoH)</strong> — encrypted on port 443, invisible to your ISP. Custom IP mode uses plain UDP/TCP (unencrypted).</p>
+ <p class="text-xs text-gray-500 dark:text-neutral-400">ZeroSink forwards allowed queries to your chosen upstream resolver over <strong>DNS-over-HTTPS (DoH)</strong> — encrypted on port 443, invisible to your ISP. Custom IP mode uses plain UDP/TCP (unencrypted). <span class="inline-flex items-center gap-1 ml-1"><i class="mdi mdi-lock text-xs text-[#32cd32]"></i> Encrypted <i class="mdi mdi-lock-open-variant text-xs text-red-400 ml-1.5"></i> Unencrypted</span></p>
 
  <form @submit.prevent="updateSettings()" class="space-y-4">
 
@@ -1633,14 +1633,13 @@
  : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 hover:border-lime-400 dark:hover:border-[#32cd32]/50'"
  class="relative flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer w-full"
  >
- <!-- Encrypted badge -->
- <span
- :class="provider.encrypted ? 'bg-lime-100 dark:bg-lime-900/40 text-lime-700 dark:text-lime-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'"
- class="absolute top-2.5 right-2.5 text-2xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
- >
- <i :class="provider.encrypted ? 'mdi mdi-lock' : 'mdi mdi-lock-open-variant'" class="text-xs"></i>
- <span x-text="provider.encrypted ? 'Encrypted' : 'Unencrypted'"></span>
- </span>
+  <!-- Encrypted badge -->
+  <span
+  :class="provider.encrypted ? 'bg-[#32cd32]/10 text-[#32cd32]' : 'bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400'"
+  class="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded-full flex items-center"
+  >
+  <i :class="provider.encrypted ? 'mdi mdi-lock' : 'mdi mdi-lock-open-variant'" class="text-sm"></i>
+  </span>
  <!-- Icon + Name -->
  <div class="flex items-center gap-2">
  <i :class="'mdi ' + provider.icon" class="text-xl" :style="upstreamDnsProvider === provider.key ? 'color: #32cd32' : 'color: #9ca3af'"></i>
@@ -2514,7 +2513,7 @@
  showSslInstructions: false,
  
  // Parental & Premium State
- FRONTEND_VERSION: '1.1.0',
+ FRONTEND_VERSION: '1.2.0',
 premiumResolving: false,
   checkoutLoading: false,
 premiumActive: false,
