@@ -2,6 +2,12 @@
 
 All notable changes to the ZeroSink project will be documented in this file.
 
+## [1.2.1] - 2026-06-30
+
+### Changed
+
+- **Reduced DoH URL font size in provider cards**: Changed the upstream DNS provider card URL text from `text-2xs` to `text-[10px]` with tighter line-height so full HTTPS URLs fit within the card without overflow. Added a hover tooltip showing the complete URL.
+
 ## [1.2.0] - 2026-06-30
 
 ### Changed
